@@ -12,6 +12,10 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
     "@tailwindcss/vite": "^4.1.18",
     "firebase": "^12.8.0",
     "lucide-react": "^0.563.0",

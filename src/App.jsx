@@ -80,6 +80,7 @@ import {
   Person as PersonIcon,
   Close as CloseIcon,
   Assessment as BarChartIcon,
+  Block as BlockIcon,
 } from "@mui/icons-material";
 
 // --- Firebase Config ---
@@ -143,7 +144,12 @@ const theme = createTheme({
   },
 });
 
-const STATUS = { NOT_YET: "not_yet", PENDING: "pending", FINISHED: "finished" };
+const STATUS = {
+  NOT_YET: "not_yet",
+  PENDING: "pending",
+  FINISHED: "finished",
+  CANCELED: "canceled",
+};
 
 // --- Helpers ---
 const getDaysLeft = (endDate) => {
@@ -288,10 +294,17 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
             const todoCount = plan.actions.filter(
               (a) => a.status === STATUS.NOT_YET,
             ).length;
-            const total = plan.actions.length;
+            const validActions = plan.actions.filter(
+              (a) => a.status !== STATUS.CANCELED,
+            );
+            const total = validActions.length;
             const progress = total > 0 ? (doneCount / total) * 100 : 0;
             const previewActions = plan.actions.slice(0, 3);
             const remainingActions = total - 3;
+
+            const canceledCount = plan.actions.filter(
+              (a) => a.status === STATUS.CANCELED,
+            ).length;
 
             return (
               <Card key={plan.id} elevation={0}>
@@ -458,6 +471,20 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
                           {todoCount} To Do
                         </Typography>
                       </Stack>
+                      {canceledCount > 0 && (
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <BlockIcon
+                            sx={{ fontSize: 18, color: "text.disabled" }}
+                          />
+                          <Typography
+                            variant="caption"
+                            fontWeight="bold"
+                            color="text.secondary"
+                          >
+                            {canceledCount} Canceled
+                          </Typography>
+                        </Stack>
+                      )}
                     </Stack>
                   </CardContent>
                 </CardActionArea>
@@ -485,8 +512,12 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   const doneCount = plan.actions.filter(
     (a) => a.status === STATUS.FINISHED,
   ).length;
-  const progress = (doneCount / plan.actions.length) * 100;
+  const validActionsCount = plan.actions.filter(
+    (a) => a.status !== STATUS.CANCELED,
+  ).length;
 
+  const progress =
+    validActionsCount > 0 ? (doneCount / validActionsCount) * 100 : 0;
   const daysMeta = getDaysLeft(plan.endDate);
 
   return (
@@ -590,6 +621,8 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                     <CheckCircleIcon color="success" />
                   ) : action.status === STATUS.PENDING ? (
                     <AccessTimeIcon color="warning" />
+                  ) : action.status === STATUS.CANCELED ? (
+                    <BlockIcon sx={{ color: "text.disabled" }} />
                   ) : (
                     <CircleIcon color="disabled" />
                   )}
@@ -642,9 +675,17 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                   }
                   primaryTypographyProps={{
                     sx: {
-                      textDecoration: isDone ? "line-through" : "none",
-                      color: isDone ? "text.secondary" : "text.primary",
-                      fontWeight: isDone ? 400 : 500,
+                      textDecoration:
+                        isDone || action.status === STATUS.CANCELED
+                          ? "line-through"
+                          : "none",
+                      color:
+                        isDone || action.status === STATUS.CANCELED
+                          ? "text.secondary"
+                          : "text.primary",
+                      opacity: action.status === STATUS.CANCELED ? 0.6 : 1,
+                      fontWeight:
+                        isDone || action.status === STATUS.CANCELED ? 400 : 500,
                     },
                   }}
                 />
@@ -1142,19 +1183,14 @@ const App = () => {
     setView("home");
   };
 
-  const deletePlan = async (id) => {
-    if (confirm("Delete this plan?")) {
-      await deleteDoc(doc(db, "users", user.uid, "plans", id));
-      setView("home");
-    }
-  };
-
   const updateStatus = async (planId, actionIndex, currentStatus) => {
     const plan = plans.find((p) => p.id === planId);
     if (!plan) return;
     let nextStatus = STATUS.PENDING;
     if (currentStatus === STATUS.PENDING) nextStatus = STATUS.FINISHED;
-    else if (currentStatus === STATUS.FINISHED) nextStatus = STATUS.NOT_YET;
+    else if (currentStatus === STATUS.FINISHED) nextStatus = STATUS.CANCELED;
+    else if (currentStatus === STATUS.CANCELED) nextStatus = STATUS.NOT_YET;
+
     const newActions = [...plan.actions];
     newActions[actionIndex].status = nextStatus;
     await updateDoc(doc(db, "users", user.uid, "plans", planId), {

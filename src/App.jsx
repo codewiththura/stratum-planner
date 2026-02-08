@@ -1183,6 +1183,8 @@ const ProfileView = ({ user, handleLogout }) => (
 // ==========================================
 
 const App = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -1200,6 +1202,34 @@ const App = () => {
     planId: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Track the installation event
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+
+    setDeferredPrompt(null);
+    setShowInstallButton(false);
+  };
 
   // 1. Auth Listener
   useEffect(() => {
@@ -1302,101 +1332,169 @@ const App = () => {
   if (!user) return <LoginView />;
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      {isDeleting && (
-        <Box
+    <>
+      {showInstallButton && (
+        <Paper
+          elevation={6}
           sx={{
             position: "fixed",
-            inset: 0,
-            bgcolor: "rgba(255, 255, 255, 0.7)",
-            zIndex: 9999,
+            width: { sm: 400 },
+            top: 16,
+            left: { xs: 16, sm: "auto" },
+            right: 16,
+            zIndex: 2000,
+            p: 2,
+            borderRadius: 4,
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
-            backdropFilter: "blur(4px)",
+            justifyContent: "space-between",
+            bgcolor: "primary.main",
+            color: "white",
           }}
         >
-          <CircularProgress size={50} thickness={4} />
-          <Typography sx={{ mt: 2, fontWeight: 600, color: "text.secondary" }}>
-            Removing plan...
-          </Typography>
-        </Box>
-      )}
-
-      {view === "home" && (
-        <HomeView
-          user={user}
-          plans={plans}
-          setView={setView}
-          setSelectedPlanId={setSelectedPlanId}
-        />
-      )}
-      {view === "detail" && (
-        <DetailView
-          plan={plans.find((p) => p.id === selectedPlanId)}
-          setView={setView}
-          onRequestDelete={handleRequestDelete}
-          updateStatus={updateStatus}
-        />
-      )}
-      {(view === "create" || view === "edit") && (
-        <FormView
-          user={user}
-          plans={plans}
-          selectedPlanId={selectedPlanId}
-          setSelectedPlanId={setSelectedPlanId}
-          setView={setView}
-          isSaving={isSaving}
-          setIsSaving={setIsSaving}
-          showMessage={showMessage}
-        />
-      )}
-      {view === "profile" && (
-        <ProfileView user={user} handleLogout={handleLogout} />
-      )}
-      {(view === "home" || view === "profile") && (
-        <Paper
-          sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1000 }}
-          elevation={3}
-        >
-          <BottomNavigation
-            showLabels
-            value={view === "profile" ? 1 : 0}
-            onChange={(event, newValue) =>
-              setView(newValue === 0 ? "home" : "profile")
-            }
-          >
-            <BottomNavigationAction label="Dashboard" icon={<HomeFilled />} />
-            <BottomNavigationAction label="Profile" icon={<PersonIcon />} />
-          </BottomNavigation>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box
+              sx={{ bgcolor: "rgba(255,255,255,0.2)", p: 1, borderRadius: 2 }}
+            >
+              <BarChartIcon sx={{ color: "white" }} />
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" fontWeight="700">
+                Install Stratum
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                Access your plans directly from your home screen.
+              </Typography>
+            </Box>
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <Button
+              size="small"
+              onClick={() => setShowInstallButton(false)}
+              sx={{ color: "white", minWidth: "auto" }}
+            >
+              Later
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleInstallClick}
+              sx={{
+                bgcolor: "white",
+                color: "primary.main",
+                "&:hover": { bgcolor: "#f1f5f9" },
+              }}
+            >
+              Install
+            </Button>
+          </Stack>
         </Paper>
       )}
 
-      <DeleteConfirmDialog
-        open={deleteConfirmation.open}
-        onClose={() => setDeleteConfirmation({ open: false, planId: null })}
-        onConfirm={handleConfirmDelete}
-      />
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {isDeleting && (
+          <Box
+            sx={{
+              position: "fixed",
+              inset: 0,
+              bgcolor: "rgba(255, 255, 255, 0.7)",
+              zIndex: 9999,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(4px)",
+            }}
+          >
+            <CircularProgress size={50} thickness={4} />
+            <Typography
+              sx={{ mt: 2, fontWeight: 600, color: "text.secondary" }}
+            >
+              Removing plan...
+            </Typography>
+          </Box>
+        )}
 
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={4000}
-        onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        sx={{ bottom: { xs: 90, sm: 24 } }}
-      >
-        <Alert
+        {view === "home" && (
+          <HomeView
+            user={user}
+            plans={plans}
+            setView={setView}
+            setSelectedPlanId={setSelectedPlanId}
+          />
+        )}
+        {view === "detail" && (
+          <DetailView
+            plan={plans.find((p) => p.id === selectedPlanId)}
+            setView={setView}
+            onRequestDelete={handleRequestDelete}
+            updateStatus={updateStatus}
+          />
+        )}
+        {(view === "create" || view === "edit") && (
+          <FormView
+            user={user}
+            plans={plans}
+            selectedPlanId={selectedPlanId}
+            setSelectedPlanId={setSelectedPlanId}
+            setView={setView}
+            isSaving={isSaving}
+            setIsSaving={setIsSaving}
+            showMessage={showMessage}
+          />
+        )}
+        {view === "profile" && (
+          <ProfileView user={user} handleLogout={handleLogout} />
+        )}
+        {(view === "home" || view === "profile") && (
+          <Paper
+            sx={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1000,
+            }}
+            elevation={3}
+          >
+            <BottomNavigation
+              showLabels
+              value={view === "profile" ? 1 : 0}
+              onChange={(event, newValue) =>
+                setView(newValue === 0 ? "home" : "profile")
+              }
+            >
+              <BottomNavigationAction label="Dashboard" icon={<HomeFilled />} />
+              <BottomNavigationAction label="Profile" icon={<PersonIcon />} />
+            </BottomNavigation>
+          </Paper>
+        )}
+
+        <DeleteConfirmDialog
+          open={deleteConfirmation.open}
+          onClose={() => setDeleteConfirmation({ open: false, planId: null })}
+          onConfirm={handleConfirmDelete}
+        />
+
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={4000}
           onClose={handleCloseNotification}
-          severity={notification.severity}
-          variant="filled"
-          sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          sx={{ bottom: { xs: 90, sm: 24 } }}
         >
-          {notification.message}
-        </Alert>
-      </Snackbar>
-    </ThemeProvider>
+          <Alert
+            onClose={handleCloseNotification}
+            severity={notification.severity}
+            variant="filled"
+            sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+          >
+            {notification.message}
+          </Alert>
+        </Snackbar>
+      </ThemeProvider>
+    </>
   );
 };
 

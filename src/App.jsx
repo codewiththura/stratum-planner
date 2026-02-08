@@ -698,6 +698,13 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   );
 };
 
+const clampDate = (dateStr, minDate, maxDate) => {
+  if (!dateStr || !minDate || !maxDate) return dateStr;
+  if (dateStr < minDate) return minDate;
+  if (dateStr > maxDate) return maxDate;
+  return dateStr;
+};
+
 const FormView = ({
   user,
   plans,
@@ -747,9 +754,20 @@ const FormView = ({
   }, [formData, existing]);
 
   const updateActionField = (index, field, value) => {
-    const newActions = [...formData.actions];
-    newActions[index][field] = value;
-    setFormData({ ...formData, actions: newActions });
+    setFormData((prev) => {
+      const newActions = [...prev.actions];
+      newActions[index] = { ...newActions[index], [field]: value };
+
+      if (["startDate", "endDate", "specificDate"].includes(field)) {
+        newActions[index][field] = clampDate(
+          value,
+          prev.startDate,
+          prev.endDate,
+        );
+      }
+
+      return { ...prev, actions: newActions };
+    });
   };
 
   const addActionField = () => {
@@ -981,6 +999,10 @@ const FormView = ({
                             fullWidth
                             size="small"
                             value={action.specificDate || ""}
+                            inputProps={{
+                              min: formData.startDate,
+                              max: formData.endDate,
+                            }}
                             onChange={(e) =>
                               updateActionField(
                                 idx,
@@ -1006,6 +1028,10 @@ const FormView = ({
                             fullWidth
                             size="small"
                             value={action.startDate || ""}
+                            inputProps={{
+                              min: formData.startDate,
+                              max: formData.endDate,
+                            }}
                             onChange={(e) =>
                               updateActionField(
                                 idx,
@@ -1019,6 +1045,10 @@ const FormView = ({
                             fullWidth
                             size="small"
                             value={action.endDate || ""}
+                            inputProps={{
+                              min: formData.startDate,
+                              max: formData.endDate,
+                            }}
                             onChange={(e) =>
                               updateActionField(idx, "endDate", e.target.value)
                             }

@@ -20,9 +20,9 @@ export default defineConfig({
         "mask-able-icon.png",
       ],
       manifest: {
-        name: "Weekly Planner",
-        short_name: "WeeklyPlanner",
-        description: "Track high-level productivity across weeks.",
+        name: "Action Planner",
+        short_name: "Stratum",
+        description: "Break big goals into scheduled sub-actions.",
         theme_color: "#ffffff",
         icons: [
           {

@@ -200,10 +200,10 @@ const LoginView = () => (
     }}
   >
     <Box sx={{ p: 2, bgcolor: "primary.main", borderRadius: 4, mb: 3 }}>
-      <CheckCircleIcon sx={{ fontSize: 40, color: "white" }} />
+      <BarChartIcon sx={{ fontSize: 40, color: "white" }} />
     </Box>
     <Typography variant="h5" fontWeight="800" gutterBottom>
-      Weekly Action
+      Stratum - The Action Planner
     </Typography>
     <Typography
       variant="body2"
@@ -211,7 +211,7 @@ const LoginView = () => (
       align="center"
       sx={{ mb: 6, maxWidth: 300 }}
     >
-      Professional weekly planning for mobile.
+      Professional goal tracker that breaks big ambitions into scheduled sub-actions.
     </Typography>
     <Fab
       variant="extended"
@@ -253,7 +253,7 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
           fontWeight="500"
           sx={{ flexGrow: 1, color: "text.primary", letterSpacing: -0.5 }}
         >
-          Weekly Planner
+          Dashboard
         </Typography>
         <Avatar src={user?.photoURL} sx={{ width: 32, height: 32 }} />
       </Toolbar>

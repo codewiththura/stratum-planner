@@ -211,7 +211,8 @@ const LoginView = () => (
       align="center"
       sx={{ mb: 6, maxWidth: 300 }}
     >
-      Professional goal tracker that breaks big ambitions into scheduled sub-actions.
+      Professional goal tracker that breaks big ambitions into scheduled
+      sub-actions.
     </Typography>
     <Fab
       variant="extended"
@@ -486,6 +487,8 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   ).length;
   const progress = (doneCount / plan.actions.length) * 100;
 
+  const daysMeta = getDaysLeft(plan.endDate);
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.paper" }}>
       <AppBar
@@ -514,14 +517,33 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             {plan.title}
           </Typography>
-          <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            alignItems="center"
+            spacing={1}
+            mb={2}
+          >
             <Chip
-              icon={<EventIcon />}
-              label={`Due ${new Date(plan.endDate).toLocaleDateString()}`}
+              icon={<EventIcon sx={{ fontSize: "1rem !important" }} />}
+              label={`${new Date(plan.startDate).toLocaleDateString()} - ${new Date(plan.endDate).toLocaleDateString()}`}
               size="small"
               variant="outlined"
+              sx={{ color: "text.secondary" }}
             />
-            <Typography variant="caption" fontWeight="bold" color="primary">
+            <Chip
+              label={daysMeta.label}
+              size="small"
+              variant="filled"
+              color={daysMeta.color === "success" ? "success" : daysMeta.color}
+              sx={{ fontWeight: 700 }}
+            />
+            <Typography
+              variant="caption"
+              fontWeight="bold"
+              color="primary"
+              sx={{ ml: "auto !important" }}
+            >
               {Math.round(progress)}% Complete
             </Typography>
           </Stack>
@@ -647,6 +669,8 @@ const FormView = ({
 }) => {
   const existing = plans.find((p) => p.id === selectedPlanId);
 
+  const [taskToDelete, setTaskToDelete] = useState(null);
+
   const [formData, setFormData] = useState(() => {
     if (existing) return existing;
     return {
@@ -668,6 +692,18 @@ const FormView = ({
       ],
     };
   });
+
+  const isDirty = React.useMemo(() => {
+    if (existing) {
+      return JSON.stringify(formData) !== JSON.stringify(existing);
+    } else {
+      return (
+        formData.title.trim() !== "" ||
+        formData.actions.some((a) => a.title.trim() !== "") ||
+        formData.endDate !== ""
+      );
+    }
+  }, [formData, existing]);
 
   const updateActionField = (index, field, value) => {
     const newActions = [...formData.actions];
@@ -733,6 +769,13 @@ const FormView = ({
       showMessage("Failed to save changes. Please try again.", "error");
       setIsSaving(false);
     }
+  };
+
+  const handleConfirmDeleteTask = () => {
+    if (taskToDelete === null) return;
+    const newActions = formData.actions.filter((_, i) => i !== taskToDelete);
+    setFormData({ ...formData, actions: newActions });
+    setTaskToDelete(null);
   };
 
   return (
@@ -836,12 +879,7 @@ const FormView = ({
                   <IconButton
                     size="small"
                     color="error"
-                    onClick={() => {
-                      const newActions = formData.actions.filter(
-                        (_, i) => i !== idx,
-                      );
-                      setFormData({ ...formData, actions: newActions });
-                    }}
+                    onClick={() => setTaskToDelete(idx)}
                     sx={{ position: "absolute", top: 8, right: 8 }}
                   >
                     <CloseIcon fontSize="small" />
@@ -978,13 +1016,41 @@ const FormView = ({
               size="large"
               onClick={handleSave}
               sx={{ maxWidth: 400 }}
-              disabled={isSaving}
+              disabled={isSaving || !isDirty}
             >
-              Save Plan
+              {existing ? "Update Plan" : "Save Plan"}
             </Button>
           </Paper>
         </>
       )}
+
+      {/* Task Deletion Confirmation */}
+      <Dialog
+        open={taskToDelete !== null}
+        onClose={() => setTaskToDelete(null)}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Remove Task?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to remove "
+            {formData.actions[taskToDelete]?.title || "this task"}"? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setTaskToDelete(null)} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDeleteTask}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            Remove
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };

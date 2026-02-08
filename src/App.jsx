@@ -557,7 +557,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           >
             <Chip
               icon={<EventIcon sx={{ fontSize: "1rem !important" }} />}
-              label={`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString()}`}
+              label={`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`}
               size="small"
               variant="outlined"
               sx={{ color: "text.secondary" }}
@@ -1199,6 +1199,7 @@ const App = () => {
     open: false,
     planId: null,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 1. Auth Listener
   useEffect(() => {
@@ -1262,18 +1263,20 @@ const App = () => {
     const id = deleteConfirmation.planId;
     if (!id) return;
 
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "plans", id));
-      showMessage("Plan deleted successfully", "success");
+    setIsDeleting(true);
 
-      if (selectedPlanId === id) {
-        setView("home");
-        setSelectedPlanId(null);
-      }
+    try {
+      setView("home");
+      setSelectedPlanId(null);
+
+      await deleteDoc(doc(db, "users", user.uid, "plans", id));
+
+      showMessage("Plan deleted successfully", "success");
     } catch (error) {
       console.error("Delete error", error);
       showMessage("Failed to delete plan", "error");
     } finally {
+      setIsDeleting(false);
       setDeleteConfirmation({ open: false, planId: null });
     }
   };
@@ -1301,6 +1304,27 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      {isDeleting && (
+        <Box
+          sx={{
+            position: "fixed",
+            inset: 0,
+            bgcolor: "rgba(255, 255, 255, 0.7)",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(4px)",
+          }}
+        >
+          <CircularProgress size={50} thickness={4} />
+          <Typography sx={{ mt: 2, fontWeight: 600, color: "text.secondary" }}>
+            Removing plan...
+          </Typography>
+        </Box>
+      )}
+
       {view === "home" && (
         <HomeView
           user={user}
@@ -1332,7 +1356,6 @@ const App = () => {
       {view === "profile" && (
         <ProfileView user={user} handleLogout={handleLogout} />
       )}
-
       {(view === "home" || view === "profile") && (
         <Paper
           sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1000 }}

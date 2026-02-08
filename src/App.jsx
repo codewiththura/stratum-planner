@@ -545,7 +545,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
 
       <Container maxWidth="sm" sx={{ py: 3 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>
             {plan.title}
           </Typography>
           <Stack
@@ -557,7 +557,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           >
             <Chip
               icon={<EventIcon sx={{ fontSize: "1rem !important" }} />}
-              label={`${new Date(plan.startDate).toLocaleDateString()} - ${new Date(plan.endDate).toLocaleDateString()}`}
+              label={`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString()}`}
               size="small"
               variant="outlined"
               sx={{ color: "text.secondary" }}
@@ -581,17 +581,39 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           <LinearProgress
             variant="determinate"
             value={progress}
-            sx={{ height: 8, borderRadius: 4 }}
+            sx={{ height: 8, borderRadius: 4, my: 3 }}
           />
         </Box>
 
-        <Typography
-          variant="subtitle2"
-          color="text.secondary"
-          sx={{ mb: 2, textTransform: "uppercase", letterSpacing: 1 }}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 2,
+          }}
         >
-          Execution List
-        </Typography>
+          <Typography
+            variant="subtitle2"
+            color="text.secondary"
+            sx={{ textTransform: "uppercase", letterSpacing: 1 }}
+          >
+            Execution List
+          </Typography>
+
+          <Chip
+            label={`${plan.actions.length} ${plan.actions.length === 1 ? "Action" : "Actions"}`}
+            size="small"
+            variant="outlined"
+            sx={{
+              fontWeight: 700,
+              fontSize: "0.65rem",
+              bgcolor: "#f8fafc",
+              color: "text.secondary",
+              border: "1px dashed #cbd5e1",
+            }}
+          />
+        </Box>
 
         <List disablePadding>
           {plan.actions.map((action, idx) => {
@@ -600,7 +622,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               <ListItem
                 key={idx}
                 disableGutters
-                sx={{ borderBottom: "1px solid #f8fafc", py: 2 }}
+                sx={{ borderBottom: "1px solid #f8fafc", py: 1 }}
                 secondaryAction={
                   <IconButton
                     edge="end"

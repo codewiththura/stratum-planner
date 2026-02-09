@@ -86,7 +86,8 @@ import {
   AccessTimeFilled as AccessTimeFilledIcon,
   Home as HomeIcon,
   History as HistoryIcon,
-  Folder as FolderIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from "@mui/icons-material";
 
 // --- Firebase Config ---
@@ -145,6 +146,47 @@ const theme = createTheme({
     MuiFab: {
       styleOverrides: {
         root: { boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)" },
+      },
+    },
+  },
+});
+
+const getDesignTokens = (mode) => ({
+  palette: {
+    mode,
+    primary: { main: "#3b82f6" }, // Slightly brighter blue for dark mode visibility
+    secondary: { main: mode === "light" ? "#64748b" : "#94a3b8" },
+    background: {
+      default: mode === "light" ? "#f8fafc" : "#0f172a", // Deep Navy background
+      paper: mode === "light" ? "#ffffff" : "#1e293b", // Lighter Navy for cards
+    },
+    text: {
+      primary: mode === "light" ? "#0f172a" : "#f8fafc",
+      secondary: mode === "light" ? "#64748b" : "#94a3b8",
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", sans-serif',
+    h6: { fontWeight: 700, fontSize: "1.1rem" },
+    button: { textTransform: "none", fontWeight: 600 },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          boxShadow: mode === "light" ? "0 1px 3px rgba(0,0,0,0.05)" : "none",
+          border: mode === "light" ? "1px solid #e2e8f0" : "1px solid #334155",
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: mode === "light" ? "#ffffff" : "#0f172a",
+          borderBottom:
+            mode === "light" ? "1px solid #e2e8f0" : "1px solid #1e293b",
+        },
       },
     },
   },
@@ -1543,7 +1585,7 @@ const FormView = ({
   );
 };
 
-const ProfileView = ({ user, handleLogout }) => (
+const ProfileView = ({ user, handleLogout, mode, setMode }) => (
   <Box
     sx={{
       p: 4,
@@ -1554,22 +1596,49 @@ const ProfileView = ({ user, handleLogout }) => (
     }}
   >
     <Avatar src={user.photoURL} sx={{ width: 80, height: 80, mb: 2 }} />
-    <Typography variant="h6">{user.displayName}</Typography>
+    <Typography variant="h6" color="text.primary">
+      {user.displayName}
+    </Typography>
     <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
       {user.email}
     </Typography>
-    <List
-      sx={{
-        width: "100%",
-        maxWidth: 360,
-        bgcolor: "background.paper",
-        borderRadius: 2,
-      }}
+
+    <Paper
+      variant="outlined"
+      sx={{ width: "100%", maxWidth: 360, borderRadius: 4, overflow: "hidden" }}
     >
-      <ListItem button onClick={handleLogout} sx={{ color: "error.main" }}>
-        <ListItemText primary="Sign Out" />
-      </ListItem>
-    </List>
+      <List disablePadding>
+        <ListItem sx={{ py: 2 }}>
+          <ListItemIcon>
+            {mode === "dark" ? <DarkModeIcon /> : <LightModeIcon />}
+          </ListItemIcon>
+          <ListItemText
+            primary="Appearance"
+            secondary={mode === "dark" ? "Dark Mode" : "Light Mode"}
+          />
+          <ToggleButtonGroup
+            value={mode}
+            exclusive
+            size="small"
+            onChange={(e, val) => val && setMode(val)}
+          >
+            <ToggleButton value="light">
+              <LightModeIcon fontSize="small" />
+            </ToggleButton>
+            <ToggleButton value="dark">
+              <DarkModeIcon fontSize="small" />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </ListItem>
+        <Divider />
+        <ListItemButton
+          onClick={handleLogout}
+          sx={{ color: "error.main", py: 2 }}
+        >
+          <ListItemText primary="Sign Out" />
+        </ListItemButton>
+      </List>
+    </Paper>
   </Box>
 );
 
@@ -1970,6 +2039,16 @@ const App = () => {
     return sortablePlans;
   }, [plans, sortConfig]);
 
+  const [mode, setMode] = useState(
+    localStorage.getItem("themeMode") || "light",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("themeMode", mode);
+  }, [mode]);
+
+  const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
+
   // Track the installation event
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -2232,7 +2311,12 @@ const App = () => {
           />
         )}
         {view === "profile" && (
-          <ProfileView user={user} handleLogout={handleLogout} />
+          <ProfileView
+            user={user}
+            handleLogout={handleLogout}
+            mode={mode}
+            setMode={setMode}
+          />
         )}
         {view === "history" && (
           <HistoryView plans={plans} setView={setView} user={user} />

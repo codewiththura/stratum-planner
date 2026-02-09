@@ -258,7 +258,11 @@ const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
   const options = [
     { label: "Start Date", key: "startDate", icon: <EventIcon /> },
     { label: "Progress Level", key: "progress", icon: <BarChartIcon /> },
-    { label: "Urgency (Days Left)", key: "daysLeft", icon: <AccessTimeFilledIcon /> },
+    {
+      label: "Urgency (Days Left)",
+      key: "daysLeft",
+      icon: <AccessTimeFilledIcon />,
+    },
     { label: "Number of Tasks", key: "actions", icon: <TaskIcon /> },
   ];
 
@@ -444,7 +448,9 @@ const HomeView = ({
               borderColor: "primary.main",
             }}
           >
-            {isFiltered ? `Sorted By: ${sortLabels[sortConfig.key]}` : "Sort By"}
+            {isFiltered
+              ? `Sorted By: ${sortLabels[sortConfig.key]}`
+              : "Sort By"}
           </Button>
         </Stack>
         <Stack spacing={2}>

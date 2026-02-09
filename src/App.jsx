@@ -841,17 +841,21 @@ const FormView = ({
     }
   }, [formData, existing]);
 
-  const updateActionField = (index, field, value) => {
+  const updateActionField = (index, fieldOrUpdates, value) => {
     setFormData((prev) => {
       const newActions = [...prev.actions];
-      newActions[index] = { ...newActions[index], [field]: value };
+      const currentAction = { ...newActions[index] };
 
-      if (["startDate", "endDate", "specificDate"].includes(field)) {
-        newActions[index][field] = clampDate(
-          value,
-          prev.startDate,
-          prev.endDate,
-        );
+      if (typeof fieldOrUpdates === "object") {
+        newActions[index] = { ...currentAction, ...fieldOrUpdates };
+      } else {
+        let finalValue = value;
+
+        if (["startDate", "endDate", "specificDate"].includes(fieldOrUpdates)) {
+          finalValue = clampDate(value, prev.startDate, prev.endDate);
+        }
+
+        newActions[index] = { ...currentAction, [fieldOrUpdates]: finalValue };
       }
 
       return { ...prev, actions: newActions };
@@ -1017,28 +1021,21 @@ const FormView = ({
               <Typography variant="subtitle2" color="primary">
                 ACTION TASKS
               </Typography>
-              {formData.actions.map((action, idx) => (
-                <Paper
-                  key={idx}
-                  variant="outlined"
-                  sx={{ p: 2, position: "relative" }}
-                >
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setTaskToDelete(idx)}
-                    sx={{ position: "absolute", top: 8, right: 8 }}
+              {formData.actions.map((action, idx) => {
+                const scheduleMode =
+                  action.startTime || action.endTime ? "time" : "range";
+
+                return (
+                  <Paper
+                    key={idx}
+                    variant="outlined"
+                    sx={{ p: 2.5, mb: 2, borderRadius: 3 }}
                   >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                  <Stack spacing={2}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 1,
-                        alignItems: "center",
-                        pr: 4,
-                      }}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ mb: 2 }}
                     >
                       <CircleIcon fontSize="small" color="disabled" />
                       <TextField
@@ -1049,104 +1046,127 @@ const FormView = ({
                         onChange={(e) =>
                           updateActionField(idx, "title", e.target.value)
                         }
+                        InputProps={{
+                          disableUnderline: false,
+                          sx: { fontWeight: 600 },
+                        }}
                       />
-                    </Box>
-                    <TextField
-                      placeholder="Description / Notes"
-                      fullWidth
-                      size="small"
-                      value={action.description || ""}
-                      onChange={(e) =>
-                        updateActionField(idx, "description", e.target.value)
-                      }
-                    />
-                    <Box>
-                      <ToggleButtonGroup
-                        value={action.dateType || "range"}
-                        exclusive
-                        onChange={(_, val) =>
-                          val && updateActionField(idx, "dateType", val)
-                        }
+                      <IconButton
                         size="small"
-                        sx={{ mb: 1.5, height: 28 }}
+                        color="error"
+                        onClick={() => setTaskToDelete(idx)}
                       >
-                        <ToggleButton value="range" sx={{ fontSize: "0.7rem" }}>
-                          Range
-                        </ToggleButton>
-                        <ToggleButton
-                          value="specific"
-                          sx={{ fontSize: "0.7rem" }}
-                        >
-                          Specific
-                        </ToggleButton>
-                      </ToggleButtonGroup>
-                      {action.dateType === "specific" ? (
-                        <Stack direction="row" spacing={1}>
-                          <TextField
-                            type="date"
-                            fullWidth
-                            size="small"
-                            value={action.specificDate || ""}
-                            inputProps={{
-                              min: formData.startDate,
-                              max: formData.endDate,
-                            }}
-                            onChange={(e) =>
-                              updateActionField(
-                                idx,
-                                "specificDate",
-                                e.target.value,
-                              )
-                            }
-                          />
-                          <TextField
-                            placeholder="Duration (e.g. 2h)"
-                            fullWidth
-                            size="small"
-                            value={action.duration || ""}
-                            onChange={(e) =>
-                              updateActionField(idx, "duration", e.target.value)
-                            }
-                          />
-                        </Stack>
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+
+                    <ToggleButtonGroup
+                      value={scheduleMode}
+                      exclusive
+                      size="small"
+                      onChange={(_, mode) => {
+                        if (!mode) return;
+
+                        if (mode === "range") {
+                          updateActionField(idx, {
+                            startTime: "",
+                            endTime: "",
+                          });
+                        } else {
+                          updateActionField(idx, {
+                            endDate: "",
+                            startTime: "09:00",
+                          });
+                        }
+                      }}
+                      sx={{ mb: 2, display: "flex" }}
+                    >
+                      <ToggleButton value="range" sx={{ flex: 1 }}>
+                        Date Range
+                      </ToggleButton>
+                      <ToggleButton value="time" sx={{ flex: 1 }}>
+                        Time Slot
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+
+                    <Stack spacing={2}>
+                      <TextField
+                        type="date"
+                        label="Date"
+                        fullWidth
+                        size="small"
+                        value={action.startDate || ""}
+                        inputProps={{
+                          min: formData.startDate,
+                          max: formData.endDate,
+                        }}
+                        onChange={(e) =>
+                          updateActionField(idx, "startDate", e.target.value)
+                        }
+                        InputLabelProps={{ shrink: true }}
+                      />
+
+                      {scheduleMode === "range" ? (
+                        <TextField
+                          type="date"
+                          label="End Date"
+                          fullWidth
+                          size="small"
+                          value={action.endDate || ""}
+                          inputProps={{
+                            min: action.startDate || formData.startDate,
+                            max: formData.endDate,
+                          }}
+                          onChange={(e) =>
+                            updateActionField(idx, "endDate", e.target.value)
+                          }
+                          InputLabelProps={{ shrink: true }}
+                        />
                       ) : (
-                        <Stack direction="row" spacing={1}>
+                        <Stack direction="row" spacing={2}>
                           <TextField
-                            type="date"
+                            type="time"
+                            label="From"
                             fullWidth
                             size="small"
-                            value={action.startDate || ""}
-                            inputProps={{
-                              min: formData.startDate,
-                              max: formData.endDate,
-                            }}
+                            value={action.startTime || ""}
                             onChange={(e) =>
                               updateActionField(
                                 idx,
-                                "startDate",
+                                "startTime",
                                 e.target.value,
                               )
                             }
+                            InputLabelProps={{ shrink: true }}
                           />
                           <TextField
-                            type="date"
+                            type="time"
+                            label="To"
                             fullWidth
                             size="small"
-                            value={action.endDate || ""}
-                            inputProps={{
-                              min: formData.startDate,
-                              max: formData.endDate,
-                            }}
+                            value={action.endTime || ""}
                             onChange={(e) =>
-                              updateActionField(idx, "endDate", e.target.value)
+                              updateActionField(idx, "endTime", e.target.value)
                             }
+                            InputLabelProps={{ shrink: true }}
                           />
                         </Stack>
                       )}
-                    </Box>
-                  </Stack>
-                </Paper>
-              ))}
+
+                      <TextField
+                        placeholder="Notes..."
+                        fullWidth
+                        size="small"
+                        multiline
+                        value={action.description || ""}
+                        onChange={(e) =>
+                          updateActionField(idx, "description", e.target.value)
+                        }
+                      />
+                    </Stack>
+                  </Paper>
+                );
+              })}
               <Button
                 startIcon={<AddIcon />}
                 onClick={addActionField}

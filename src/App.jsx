@@ -766,7 +766,6 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                           color="primary.main"
                         >
                           {action.endDate ? (
-                            // MODE: Date Range (Feb 12 - Feb 14)
                             `${new Date(action.startDate).toLocaleDateString(
                               undefined,
                               {
@@ -781,7 +780,6 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                               },
                             )}`
                           ) : (
-                            // MODE: Time Slot (Feb 12 • 2 hr)
                             <>
                               {new Date(action.startDate).toLocaleDateString(
                                 undefined,
@@ -810,6 +808,29 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                           )}
                         </Typography>
                       </Stack>
+
+                      {action.status === STATUS.FINISHED &&
+                        action.actualDate && (
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.5}
+                            sx={{ mt: 0.2 }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="textDisabled"
+                              fontWeight="500"
+                            >
+                              Completed:{" "}
+                              {new Date(action.actualDate).toLocaleDateString(
+                                undefined,
+                                { month: "short", day: "numeric" },
+                              )}
+                              {action.actualTime && ` @ ${action.actualTime}`}
+                            </Typography>
+                          </Stack>
+                        )}
                     </Box>
                   }
                   primaryTypographyProps={{
@@ -1231,6 +1252,53 @@ const FormView = ({
                         }
                       />
                     </Stack>
+
+                    {action.status === STATUS.FINISHED && (
+                      <Box
+                        sx={{ mt: 2, pt: 2, borderTop: "1px solid #f1f5f9" }}
+                      >
+                        <Typography
+                          variant="caption"
+                          fontWeight="bold"
+                          color="success.main"
+                          sx={{ mb: 2, display: "block" }}
+                        >
+                          COMPLETION (LOGGED)
+                        </Typography>
+                        <Stack direction="row" spacing={2}>
+                          <TextField
+                            type="date"
+                            label="Actual Date"
+                            fullWidth
+                            size="small"
+                            value={action.actualDate || ""}
+                            onChange={(e) =>
+                              updateActionField(
+                                idx,
+                                "actualDate",
+                                e.target.value,
+                              )
+                            }
+                            InputLabelProps={{ shrink: true }}
+                          />
+                          <TextField
+                            type="time"
+                            label="Actual Time"
+                            fullWidth
+                            size="small"
+                            value={action.actualTime || ""}
+                            onChange={(e) =>
+                              updateActionField(
+                                idx,
+                                "actualTime",
+                                e.target.value,
+                              )
+                            }
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Stack>
+                      </Box>
+                    )}
                   </Paper>
                 );
               })}
@@ -1422,13 +1490,31 @@ const App = () => {
   const updateStatus = async (planId, actionIndex, currentStatus) => {
     const plan = plans.find((p) => p.id === planId);
     if (!plan) return;
+
     let nextStatus = STATUS.PENDING;
+    const now = new Date();
+    const actualDate = now.toISOString().split("T")[0];
+    const actualTime = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
     if (currentStatus === STATUS.PENDING) nextStatus = STATUS.FINISHED;
     else if (currentStatus === STATUS.FINISHED) nextStatus = STATUS.CANCELED;
     else if (currentStatus === STATUS.CANCELED) nextStatus = STATUS.NOT_YET;
 
     const newActions = [...plan.actions];
     newActions[actionIndex].status = nextStatus;
+
+    if (nextStatus === STATUS.FINISHED) {
+      newActions[actionIndex].actualDate = actualDate;
+      newActions[actionIndex].actualTime = actualTime;
+    } else if (nextStatus === STATUS.NOT_YET) {
+      newActions[actionIndex].actualDate = "";
+      newActions[actionIndex].actualTime = "";
+    }
+
     await updateDoc(doc(db, "users", user.uid, "plans", planId), {
       actions: newActions,
     });

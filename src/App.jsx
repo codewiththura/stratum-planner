@@ -63,6 +63,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Drawer,
 } from "@mui/material";
 
 // --- Icons ---
@@ -80,7 +81,10 @@ import {
   Person as PersonIcon,
   Close as CloseIcon,
   Assessment as BarChartIcon,
+  Sort as SortIcon,
   Block as BlockIcon,
+  Task as TaskIcon,
+  AccessTimeFilled as AccessTimeFilledIcon,
 } from "@mui/icons-material";
 
 // --- Firebase Config ---
@@ -250,57 +254,199 @@ const LoginView = () => (
   </Box>
 );
 
-const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
-  <Box sx={{ pb: 12 }}>
-    <AppBar
-      position="sticky"
-      color="default"
-      elevation={0}
-      sx={{ bgcolor: "background.default", borderBottom: "1px solid #e2e8f0" }}
-    >
-      <Toolbar sx={{ py: 0.5 }}>
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            bgcolor: "primary.main",
-            borderRadius: 3,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            mr: 2,
-            boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.3)",
-          }}
-        >
-          <BarChartIcon sx={{ color: "white", fontSize: 24 }} />
-        </Box>
-        <Typography
-          variant="h6"
-          fontWeight="500"
-          sx={{ flexGrow: 1, color: "text.primary", letterSpacing: -0.5 }}
-        >
-          Dashboard
-        </Typography>
-        <Avatar src={user?.photoURL} sx={{ width: 32, height: 32 }} />
-      </Toolbar>
-    </AppBar>
+const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
+  const options = [
+    { label: "Start Date", key: "startDate", icon: <EventIcon /> },
+    { label: "Progress Level", key: "progress", icon: <BarChartIcon /> },
+    { label: "Urgency (Days Left)", key: "daysLeft", icon: <AccessTimeFilledIcon /> },
+    { label: "Number of Tasks", key: "actions", icon: <TaskIcon /> },
+  ];
 
-    <Container maxWidth="sm" sx={{ pt: 3 }}>
-      {plans.length === 0 ? (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            mt: 8,
-            opacity: 0.5,
-          }}
+  return (
+    <Drawer
+      anchor="bottom"
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: { borderTopLeftRadius: 20, borderTopRightRadius: 20, p: 2, pb: 4 },
+      }}
+    >
+      <Box sx={{ width: "100%", maxWidth: 500, mx: "auto" }}>
+        <Typography
+          variant="subtitle1"
+          fontWeight="600"
+          sx={{ mb: 2, textAlign: "center" }}
         >
-          <EventIcon sx={{ fontSize: 60, mb: 2 }} />
-          <Typography>No active plans</Typography>
-          <Typography variant="caption">Tap + to create one</Typography>
-        </Box>
-      ) : (
+          Sort Plans By
+        </Typography>
+
+        <List sx={{ mb: 2 }}>
+          {options.map((option) => (
+            <ListItem key={option.key} disablePadding>
+              <ListItemButton
+                selected={sortConfig.key === option.key}
+                onClick={() => {
+                  setSortConfig({ ...sortConfig, key: option.key });
+                }}
+                sx={{ borderRadius: 2, mb: 0.5 }}
+              >
+                <ListItemIcon
+                  sx={{
+                    color:
+                      sortConfig.key === option.key
+                        ? "primary.main"
+                        : "inherit",
+                  }}
+                >
+                  {option.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={option.label}
+                  primaryTypographyProps={{
+                    fontWeight: sortConfig.key === option.key ? 700 : 500,
+                  }}
+                />
+                {sortConfig.key === option.key && (
+                  <CheckCircleIcon color="primary" fontSize="small" />
+                )}
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+
+        <Divider sx={{ mb: 2 }} />
+
+        <Typography
+          variant="caption"
+          fontWeight="700"
+          color="text.secondary"
+          sx={{ display: "block", mb: 1, ml: 1 }}
+        >
+          ORDER
+        </Typography>
+        <ToggleButtonGroup
+          value={sortConfig.direction}
+          exclusive
+          fullWidth
+          onChange={(_, dir) =>
+            dir && setSortConfig({ ...sortConfig, direction: dir })
+          }
+          size="small"
+        >
+          <ToggleButton value="asc">Ascending</ToggleButton>
+          <ToggleButton value="desc">Descending</ToggleButton>
+        </ToggleButtonGroup>
+
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={onClose}
+          sx={{ mt: 3, py: 1.5 }}
+        >
+          Done
+        </Button>
+      </Box>
+    </Drawer>
+  );
+};
+
+const HomeView = ({
+  user,
+  plans,
+  setView,
+  setSelectedPlanId,
+  sortConfig,
+  setSortConfig,
+}) => {
+  const [isSortOpen, setIsSortOpen] = React.useState(false);
+
+  const sortLabels = {
+    startDate: "Start Date",
+    progress: "Progress",
+    daysLeft: "Urgency",
+    actions: "Tasks",
+  };
+
+  const isFiltered = sortConfig.key !== "startDate";
+
+  return (
+    <Box sx={{ pb: 12 }}>
+      <AppBar
+        position="sticky"
+        color="default"
+        elevation={0}
+        sx={{
+          bgcolor: "background.default",
+          borderBottom: "1px solid #e2e8f0",
+        }}
+      >
+        <Toolbar sx={{ py: 0.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: "primary.main",
+              borderRadius: 3,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mr: 2,
+              boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.3)",
+            }}
+          >
+            <BarChartIcon sx={{ color: "white", fontSize: 24 }} />
+          </Box>
+          <Typography
+            variant="h6"
+            fontWeight="500"
+            sx={{ flexGrow: 1, color: "text.primary", letterSpacing: -0.5 }}
+          >
+            Dashboard
+          </Typography>
+          <Avatar src={user?.photoURL} sx={{ width: 32, height: 32 }} />
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="sm" sx={{ pt: 3 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 3, px: 1 }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 500,
+              color: "text.disabled",
+              textTransform: "uppercase",
+            }}
+          >
+            {plans.length} {plans.length === 1 ? "Active Plan" : "Active Plans"}
+          </Typography>
+
+          <Button
+            variant={isFiltered ? "soft" : "text"}
+            onClick={() => setIsSortOpen(true)}
+            size="small"
+            startIcon={<SortIcon />}
+            sx={{
+              color: isFiltered ? "primary.main" : "text.secondary",
+              bgcolor: "transparent",
+              borderRadius: "10px",
+              fontWeight: 500,
+              px: 1.8,
+              py: 0.6,
+              "&:hover": {
+                opacity: 0.7,
+              },
+              transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+              borderColor: "primary.main",
+            }}
+          >
+            {isFiltered ? `Sorted By: ${sortLabels[sortConfig.key]}` : "Sort By"}
+          </Button>
+        </Stack>
         <Stack spacing={2}>
           {plans.map((plan) => {
             const daysMeta = getDaysLeft(plan.endDate);
@@ -341,7 +487,11 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
                       mb={2}
                     >
                       <Box sx={{ pr: 1, flex: 1 }}>
-                        <Typography variant="h5" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
+                        <Typography
+                          variant="h5"
+                          fontWeight="bold"
+                          sx={{ lineHeight: 1.2 }}
+                        >
                           {plan.title}
                         </Typography>
                       </Box>
@@ -514,20 +664,26 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
             );
           })}
         </Stack>
-      )}
-    </Container>
-    <Fab
-      color="primary"
-      sx={{ position: "fixed", bottom: 85, right: 20 }}
-      onClick={() => {
-        setSelectedPlanId(null);
-        setView("create");
-      }}
-    >
-      <AddIcon />
-    </Fab>
-  </Box>
-);
+      </Container>
+      <Fab
+        color="primary"
+        sx={{ position: "fixed", bottom: 85, right: 20 }}
+        onClick={() => {
+          setSelectedPlanId(null);
+          setView("create");
+        }}
+      >
+        <AddIcon />
+      </Fab>
+      <SortDrawer
+        open={isSortOpen}
+        onClose={() => setIsSortOpen(false)}
+        sortConfig={sortConfig}
+        setSortConfig={setSortConfig}
+      />
+    </Box>
+  );
+};
 
 const StatItem = ({ label, value, color }) => (
   <Box sx={{ textAlign: "center", flex: 1 }}>
@@ -1416,6 +1572,56 @@ const App = () => {
     planId: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sortConfig, setSortConfig] = useState({
+    key: "startDate",
+    direction: "asc",
+  });
+
+  const sortedPlans = React.useMemo(() => {
+    let sortablePlans = [...plans];
+
+    sortablePlans.sort((a, b) => {
+      let valA, valB;
+
+      switch (sortConfig.key) {
+        case "progress": {
+          const getProg = (p) => {
+            const valid = p.actions.filter(
+              (act) => act.status !== STATUS.CANCELED,
+            );
+            return valid.length > 0
+              ? p.actions.filter((act) => act.status === STATUS.FINISHED)
+                  .length / valid.length
+              : 0;
+          };
+          valA = getProg(a);
+          valB = getProg(b);
+          break;
+        }
+
+        case "daysLeft": {
+          valA = new Date(a.endDate).getTime();
+          valB = new Date(b.endDate).getTime();
+          break;
+        }
+
+        case "actions": {
+          valA = a.actions.length;
+          valB = b.actions.length;
+          break;
+        }
+
+        default:
+          valA = a[sortConfig.key] || "";
+          valB = b[sortConfig.key] || "";
+      }
+
+      if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sortablePlans;
+  }, [plans, sortConfig]);
 
   // Track the installation event
   useEffect(() => {
@@ -1651,9 +1857,11 @@ const App = () => {
         {view === "home" && (
           <HomeView
             user={user}
-            plans={plans}
+            plans={sortedPlans}
             setView={setView}
             setSelectedPlanId={setSelectedPlanId}
+            sortConfig={sortConfig}
+            setSortConfig={setSortConfig}
           />
         )}
         {view === "detail" && (

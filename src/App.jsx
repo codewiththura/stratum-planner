@@ -241,62 +241,6 @@ const clampDate = (dateStr, minDate, maxDate) => {
   return dateStr;
 };
 
-const getDurationLabel = (start, end, isDateRange = false) => {
-  if (!start || !end) return null;
-
-  if (isDateRange) {
-    const s = new Date(start);
-    const e = new Date(end);
-    const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24)) + 1;
-    return `${diffDays} ${diffDays === 1 ? "day" : "days"}`;
-  } else {
-    const startTime = new Date(`2026-01-01T${start}`);
-    const endTime = new Date(`2026-01-01T${end}`);
-    let diff = (endTime - startTime) / 1000 / 60;
-    if (diff < 0) diff += 24 * 60;
-
-    const hours = Math.floor(diff / 60);
-    const minutes = diff % 60;
-    return `${hours > 0 ? hours + "hr " : ""}${minutes > 0 ? minutes + "m" : ""}`.trim();
-  }
-};
-
-const getPerformanceStats = (task) => {
-  const start = new Date(task.startDate);
-  const plannedEnd = task.endDate
-    ? new Date(task.endDate)
-    : new Date(task.startDate);
-  const actualEnd = new Date(task.actualDate);
-
-  const plannedDiffTime = plannedEnd.getTime() - start.getTime();
-  const plannedDays = Math.max(
-    1,
-    Math.ceil(plannedDiffTime / (1000 * 60 * 60 * 24)) + 1,
-  );
-
-  let actualDays;
-  if (actualEnd < start) {
-    actualDays = 1;
-  } else {
-    const actualDiffTime = actualEnd.getTime() - start.getTime();
-    actualDays = Math.ceil(actualDiffTime / (1000 * 60 * 60 * 24)) + 1;
-  }
-
-  const totalGapTime = plannedEnd.getTime() - actualEnd.getTime();
-  const daysAhead = Math.floor(totalGapTime / (1000 * 60 * 60 * 24));
-
-  let status = "on-time";
-  if (daysAhead > 0) status = "ahead";
-  if (daysAhead < 0) status = "behind";
-
-  return {
-    plannedDays,
-    actualDays,
-    diff: Math.abs(daysAhead),
-    status,
-  };
-};
-
 const SharedHeader = ({ title, user }) => (
   <AppBar
     position="sticky"
@@ -372,8 +316,16 @@ const LoginView = () => (
   </Box>
 );
 
-const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
-  const options = [
+const SortDrawer = ({
+  open,
+  onClose,
+  sortConfig,
+  setSortConfig,
+  title,
+  options,
+}) => {
+  // Fallback to dashboard options if none provided
+  const displayOptions = options || [
     { label: "Start Date", key: "startDate", icon: <EventIcon /> },
     { label: "Progress Level", key: "progress", icon: <BarChartIcon /> },
     {
@@ -399,17 +351,17 @@ const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
           fontWeight="600"
           sx={{ mb: 2, textAlign: "center" }}
         >
-          Sort Plans By
+          {title || "Sort By"}
         </Typography>
 
         <List sx={{ mb: 2 }}>
-          {options.map((option) => (
+          {displayOptions.map((option) => (
             <ListItem key={option.key} disablePadding>
               <ListItemButton
                 selected={sortConfig.key === option.key}
-                onClick={() => {
-                  setSortConfig({ ...sortConfig, key: option.key });
-                }}
+                onClick={() =>
+                  setSortConfig({ ...sortConfig, key: option.key })
+                }
                 sx={{ borderRadius: 2, mb: 0.5 }}
               >
                 <ListItemIcon
@@ -420,7 +372,7 @@ const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
                         : "inherit",
                   }}
                 >
-                  {option.icon}
+                  {option.icon || <SortIcon />}
                 </ListItemIcon>
                 <ListItemText
                   primary={option.label}
@@ -437,7 +389,6 @@ const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
         </List>
 
         <Divider sx={{ mb: 2 }} />
-
         <Typography
           variant="caption"
           fontWeight="700"
@@ -458,7 +409,6 @@ const SortDrawer = ({ open, onClose, sortConfig, setSortConfig }) => {
           <ToggleButton value="asc">Ascending</ToggleButton>
           <ToggleButton value="desc">Descending</ToggleButton>
         </ToggleButtonGroup>
-
         <Button
           fullWidth
           variant="contained"
@@ -518,22 +468,12 @@ const HomeView = ({
             size="small"
             startIcon={<SortIcon />}
             sx={{
-              color: isFiltered ? "primary.main" : "text.secondary",
-              bgcolor: "transparent",
+              color: "primary.main",
               borderRadius: "10px",
               fontWeight: 500,
-              px: 1.8,
-              py: 0.6,
-              "&:hover": {
-                opacity: 0.7,
-              },
-              transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-              borderColor: "primary.main",
             }}
           >
-            {isFiltered
-              ? `Sorted By: ${sortLabels[sortConfig.key]}`
-              : "Sort By"}
+            {sortLabels[sortConfig.key]} ({sortConfig.direction.toUpperCase()})
           </Button>
         </Stack>
         <Stack spacing={2}>
@@ -769,6 +709,17 @@ const HomeView = ({
         onClose={() => setIsSortOpen(false)}
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
+        title="Sort Plans By"
+        options={[
+          { label: "Start Date", key: "startDate", icon: <EventIcon /> },
+          { label: "Progress Level", key: "progress", icon: <BarChartIcon /> },
+          {
+            label: "Urgency (Days Left)",
+            key: "daysLeft",
+            icon: <AccessTimeFilledIcon />,
+          },
+          { label: "Number of Tasks", key: "actions", icon: <TaskIcon /> },
+        ]}
       />
     </Box>
   );
@@ -953,17 +904,6 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                 key={idx}
                 disableGutters
                 sx={{ borderBottom: "1px solid #f8fafc", py: 1 }}
-                secondaryAction={
-                  <IconButton
-                    edge="end"
-                    size="small"
-                    onClick={() => updateStatus(plan.id, idx, action.status)}
-                  >
-                    {action.status === STATUS.PENDING ? (
-                      <AccessTimeIcon color="warning" />
-                    ) : null}
-                  </IconButton>
-                }
               >
                 <ListItemIcon
                   sx={{ minWidth: 40 }}
@@ -1003,15 +943,23 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                       {action.description && (
                         <Typography
                           variant="caption"
-                          display="block"
-                          color="text.secondary"
-                          sx={{ mb: 0.5 }}
+                          sx={{
+                            fontStyle: "italic",
+                            color: "text.secondary",
+                            pl: 1,
+                            borderLeft: "2px solid #eee",
+                          }}
                         >
                           {action.description}
                         </Typography>
                       )}
 
-                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={0.5}
+                        sx={{ mt: 1 }}
+                      >
                         <EventIcon
                           sx={{ fontSize: 12, color: "primary.main" }}
                         />
@@ -1074,14 +1022,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                             spacing={0.5}
                             sx={{ mt: 0.5 }}
                           >
-                            <CheckCircleIcon
-                              sx={{ fontSize: 12, color: "success.main" }}
-                            />
-                            <Typography
-                              variant="caption"
-                              color="success.main"
-                              fontWeight="600"
-                            >
+                            <Typography variant="caption" fontWeight="300">
                               Completed:{" "}
                               {new Date(action.actualDate).toLocaleDateString(
                                 undefined,
@@ -1090,7 +1031,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                   day: "numeric",
                                 },
                               )}{" "}
-                              @ {formatTo12Hour(action.actualTime)}
+                              • {formatTo12Hour(action.actualTime)}
                             </Typography>
                           </Stack>
                         )}
@@ -1633,45 +1574,107 @@ const ProfileView = ({ user, handleLogout }) => (
 );
 
 const HistoryView = ({ user, plans, setView }) => {
+  const [historySort, setHistorySort] = useState({
+    key: "actualDate",
+    direction: "asc", // Default: Completion Date (ASC)
+  });
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const historySortLabels = {
+    actualDate: "Completion Date",
+    actualDays: "Actual Taken",
+  };
+
   const completedTasks = React.useMemo(() => {
-    const tasks = [];
+    let tasks = [];
     plans.forEach((plan) => {
       plan.actions.forEach((action) => {
         if (action.status === STATUS.FINISHED) {
-          tasks.push({
-            ...action,
-            planTitle: plan.title,
-          });
+          tasks.push({ ...action, planTitle: plan.title });
         }
       });
     });
 
     return tasks.sort((a, b) => {
-      const dateA = new Date(`${a.actualDate}T${a.actualTime || "00:00"}`);
-      const dateB = new Date(`${b.actualDate}T${b.actualTime || "00:00"}`);
-      return dateB - dateA;
+      let valA, valB;
+      if (historySort.key === "actualDate") {
+        valA = new Date(`${a.actualDate}T${a.actualTime || "00:00"}`).getTime();
+        valB = new Date(`${b.actualDate}T${b.actualTime || "00:00"}`).getTime();
+      } else {
+        const getDays = (t) => {
+          const start = new Date(t.startDate);
+          const end = new Date(t.actualDate);
+          return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        };
+        valA = getDays(a);
+        valB = getDays(b);
+      }
+
+      if (valA < valB) return historySort.direction === "asc" ? -1 : 1;
+      if (valA > valB) return historySort.direction === "asc" ? 1 : -1;
+      return 0;
     });
-  }, [plans]);
+  }, [plans, historySort]);
 
   return (
     <Box sx={{ pb: 10 }}>
       <SharedHeader title="Completed Actions" user={user} />
-
       <Container maxWidth="sm" sx={{ pt: 3 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 3, px: 1 }}
+        >
+          <Typography
+            variant="caption"
+            sx={{ color: "text.disabled", fontWeight: 500 }}
+          >
+            {completedTasks.length} RECORDS
+          </Typography>
+          <Button
+            onClick={() => setIsSortOpen(true)}
+            size="small"
+            startIcon={<SortIcon />}
+            sx={{ fontWeight: 500, color: "primary.main" }}
+          >
+            {historySortLabels[historySort.key]} (
+            {historySort.direction.toUpperCase()})
+          </Button>
+        </Stack>
+
         {completedTasks.length === 0 ? (
           <Box sx={{ textAlign: "center", mt: 10, px: 4 }}>
             <HistoryIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
             <Typography variant="h6" color="text.secondary" fontWeight="700">
               No records yet
             </Typography>
-            <Typography variant="body2" color="text.disabled">
-              Completed tasks will appear here automatically.
-            </Typography>
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
             {completedTasks.map((task, index) => {
-              const stats = getPerformanceStats(task);
+              const start = new Date(task.startDate || new Date());
+              const plannedEnd = task.endDate ? new Date(task.endDate) : start;
+              const actualEnd = new Date(task.actualDate || new Date());
+
+              const plannedDays = Math.max(
+                1,
+                Math.ceil((plannedEnd - start) / (1000 * 60 * 60 * 24)) + 1,
+              );
+
+              const actualDays = Math.max(
+                1,
+                Math.ceil((actualEnd - start) / (1000 * 60 * 60 * 24)) + 1,
+              );
+
+              const diffInMs = plannedEnd.getTime() - actualEnd.getTime();
+              const daysDiff = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+              let status = "on-time";
+              if (daysDiff > 0) status = "ahead";
+              else if (daysDiff < 0) status = "behind";
+
+              const absDiff = Math.abs(daysDiff);
 
               return (
                 <Paper
@@ -1679,162 +1682,210 @@ const HistoryView = ({ user, plans, setView }) => {
                   key={index}
                   sx={{ mb: 2, borderRadius: 3, p: 2 }}
                 >
-                  <Typography variant="subtitle1" fontWeight="800" gutterBottom>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight="700"
+                    display="block"
+                    mb={0.5}
+                    sx={{ ml: 0.1 }}
+                  >
+                    {task.planTitle}
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="800"
+                    gutterBottom
+                    sx={{ ml: 0.1 }}
+                  >
                     {task.title}
                   </Typography>
-
-                  <Box component="div" sx={{ mt: 1 }}>
-                    <Stack spacing={1.5}>
-                      {/* Project Title & Original Schedule */}
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                      <EventIcon
+                        sx={{ fontSize: 12, color: "text.disabled" }}
+                      />
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                        sx={{ display: "flex", alignItems: "center" }}
+                      >
+                        {task.endDate
+                          ? `${new Date(task.startDate).toLocaleDateString(
+                              undefined,
+                              { month: "short", day: "numeric" },
+                            )} - ${new Date(task.endDate).toLocaleDateString(
+                              undefined,
+                              { month: "short", day: "numeric" },
+                            )}`
+                          : `${new Date(task.startDate).toLocaleDateString(
+                              undefined,
+                              { month: "short", day: "numeric" },
+                            )}`}
+                        {task.startTime && (
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              ml: 0.5,
+                            }}
+                          >
+                            •
+                            <AccessTimeIcon
+                              sx={{
+                                fontSize: 12,
+                                mx: 0.5,
+                                color: "text.disabled",
+                              }}
+                            />
+                            {task.endTime
+                              ? calculateDuration(task.startTime, task.endTime)
+                              : formatTo12Hour(task.startTime)}
+                          </Box>
+                        )}
+                      </Typography>
+                    </Stack>
+                    <Box>
+                      <Chip
+                        size="small"
+                        label={`Completed: ${new Date(
+                          task.actualDate,
+                        ).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })} • ${formatTo12Hour(task.actualTime)}`}
+                        sx={{
+                          bgcolor: "#edf7ed",
+                          color: "#1e4620",
+                          fontWeight: 700,
+                          fontSize: "0.65rem",
+                        }}
+                      />
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 1.5,
+                        bgcolor: "action.hover",
+                        p: 1.5,
+                        borderRadius: 2,
+                      }}
+                    >
                       <Box>
                         <Typography
                           variant="caption"
                           color="text.secondary"
-                          fontWeight="700"
-                          sx={{ display: "block", mb: 0.5 }}
+                          display="block"
+                          fontWeight="500"
                         >
-                          {task.planTitle}
+                          PLANNED
                         </Typography>
-
-                        {/* Estimated Schedule Display */}
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          spacing={0.5}
-                          sx={{ color: "text.secondary" }}
-                        >
-                          <Typography variant="caption" fontWeight="500">
-                            {new Date(task.startDate).toLocaleDateString(
-                              undefined,
-                              { month: "short", day: "numeric" },
-                            )}
-                            {task.endDate
-                              ? ` - ${new Date(task.endDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
-                              : ""}
-                            {task.startTime
-                              ? ` • ${task.startTime}${task.endTime ? ` - ${task.endTime}` : " - NAN"}`
-                              : ""}
-                          </Typography>
-                        </Stack>
+                        <Typography variant="body2" fontWeight="700">
+                          {plannedDays} Days
+                        </Typography>
                       </Box>
-
-                      {/* Performance Grid */}
                       <Box
                         sx={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: 1.5,
-                          bgcolor: "action.hover",
-                          p: 1.5,
-                          borderRadius: 2,
+                          borderLeft: "1px solid",
+                          borderColor: "divider",
+                          pl: 1.5,
                         }}
                       >
-                        <Box>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                          >
-                            PLANNED
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight="700"
-                            sx={{ mt: 1 }}
-                          >
-                            {stats.plannedDays} Days
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{
-                            borderLeft: "1px solid",
-                            borderColor: "divider",
-                            pl: 1.5,
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                          >
-                            ACTUAL TAKEN
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight="700"
-                            sx={{ mt: 1 }}
-                            color={
-                              stats.status === "ahead"
-                                ? "success.main"
-                                : stats.status === "behind"
-                                  ? "error.main"
-                                  : "text.primary"
-                            }
-                          >
-                            {stats.actualDays}{" "}
-                            {stats.actualDays === 1 ? "Day" : "Days"}
-                            {stats.status === "ahead" && (
-                              <Box
-                                component="span"
-                                sx={{
-                                  ml: 0.5,
-                                  fontSize: "0.7rem",
-                                  color: "text.secondary",
-                                  opacity: 0.8,
-                                }}
-                              >
-                                ({stats.diff}d saved)
-                              </Box>
-                            )}
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      {/* Completion Badge */}
-                      <Box>
-                        <Chip
-                          size="small"
-                          icon={
-                            <CheckCircleIcon
-                              style={{ color: "#2e7d32", fontSize: "14px" }}
-                            />
-                          }
-                          label={`Completed: ${new Date(
-                            task.actualDate,
-                          ).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                          })} @ ${formatTo12Hour(task.actualTime)}`}
-                          sx={{
-                            bgcolor: "#edf7ed",
-                            color: "#1e4620",
-                            fontWeight: 700,
-                            fontSize: "0.65rem",
-                          }}
-                        />
-                      </Box>
-
-                      {task.description && (
                         <Typography
                           variant="caption"
-                          sx={{
-                            fontStyle: "italic",
-                            color: "text.secondary",
-                            pl: 1,
-                            borderLeft: "2px solid #eee",
-                          }}
+                          color="text.secondary"
+                          display="block"
+                          fontWeight="500"
                         >
-                          {task.description}
+                          ACTUAL TAKEN
                         </Typography>
-                      )}
-                    </Stack>
-                  </Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight="700"
+                          color={
+                            status === "ahead"
+                              ? "success.main"
+                              : status === "behind"
+                                ? "error.main"
+                                : "text.primary"
+                          }
+                        >
+                          {actualDays} {actualDays === 1 ? "Day" : "Days"}{" "}
+                          {status === "ahead" && (
+                            <Box
+                              component="span"
+                              sx={{
+                                fontSize: "0.7rem",
+                                opacity: 0.5,
+                                color: "text.primary",
+                                fontWeight: 500,
+                                ml: 0.5,
+                              }}
+                            >
+                              ({absDiff}d ahead of plan)
+                            </Box>
+                          )}
+                          {status === "behind" && (
+                            <Box
+                              component="span"
+                              sx={{
+                                fontSize: "0.7rem",
+                                opacity: 0.5,
+                                color: "text.primary",
+                                fontWeight: 500,
+                                ml: 0.5,
+                              }}
+                            >
+                              ({absDiff}d behind schedule)
+                            </Box>
+                          )}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {task.description && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontStyle: "italic",
+                          color: "text.secondary",
+                          pl: 1,
+                          borderLeft: "2px solid #eee",
+                        }}
+                      >
+                        {task.description}
+                      </Typography>
+                    )}
+                  </Stack>
                 </Paper>
               );
             })}
           </List>
         )}
       </Container>
+
+      <SortDrawer
+        open={isSortOpen}
+        onClose={() => setIsSortOpen(false)}
+        sortConfig={historySort}
+        setSortConfig={setHistorySort}
+        title="Sort Records By"
+        options={[
+          {
+            label: "Completion Date",
+            key: "actualDate",
+            icon: <HistoryIcon />,
+          },
+          {
+            label: "Actual Taken (Days)",
+            key: "actualDays",
+            icon: <AccessTimeIcon />,
+          },
+        ]}
+      />
     </Box>
   );
 };
@@ -1865,6 +1916,11 @@ const App = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: "startDate",
+    direction: "asc",
+  });
+
+  const [historySort, setHistorySort] = useState({
+    key: "actualDate",
     direction: "asc",
   });
 

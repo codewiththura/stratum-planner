@@ -510,15 +510,44 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
   </Box>
 );
 
+const StatItem = ({ label, value, color }) => (
+  <Box sx={{ textAlign: "center", flex: 1 }}>
+    <Typography
+      variant="caption"
+      fontWeight="700"
+      color="text.secondary"
+      display="block"
+      sx={{ textTransform: "uppercase", fontSize: "0.6rem" }}
+    >
+      {label}
+    </Typography>
+    <Typography
+      variant="h6"
+      fontWeight="800"
+      sx={{ color: color, lineHeight: 1 }}
+    >
+      {value}
+    </Typography>
+  </Box>
+);
+
 const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   if (!plan) return null;
+  const totalActions = plan.actions.length;
   const doneCount = plan.actions.filter(
     (a) => a.status === STATUS.FINISHED,
   ).length;
-  const validActionsCount = plan.actions.filter(
-    (a) => a.status !== STATUS.CANCELED,
+  const pendingCount = plan.actions.filter(
+    (a) => a.status === STATUS.PENDING,
+  ).length;
+  const todoCount = plan.actions.filter(
+    (a) => a.status === STATUS.NOT_YET,
+  ).length;
+  const canceledCount = plan.actions.filter(
+    (a) => a.status === STATUS.CANCELED,
   ).length;
 
+  const validActionsCount = totalActions - canceledCount;
   const progress =
     validActionsCount > 0 ? (doneCount / validActionsCount) * 100 : 0;
   const daysMeta = getDaysLeft(plan.endDate);
@@ -586,6 +615,40 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             value={progress}
             sx={{ height: 8, borderRadius: 4, my: 3 }}
           />
+          <Paper
+            variant="outlined"
+            sx={{
+              mt: 3,
+              p: 1.5,
+              borderRadius: 3,
+              bgcolor: "#f8fafc",
+              borderStyle: "dashed",
+            }}
+          >
+            <Stack
+              direction="row"
+              divider={<Divider orientation="vertical" flexItem />}
+              spacing={1}
+              justifyContent="space-around"
+            >
+              <StatItem
+                label="Total"
+                value={totalActions}
+                color="text.primary"
+              />
+              <StatItem label="Done" value={doneCount} color="success.main" />
+              <StatItem
+                label="Active"
+                value={pendingCount}
+                color="warning.main"
+              />
+              <StatItem
+                label="Skipped"
+                value={canceledCount}
+                color="text.disabled"
+              />
+            </Stack>
+          </Paper>
         </Box>
 
         <Box
@@ -604,7 +667,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             Execution List
           </Typography>
 
-          <Chip
+          {/* <Chip
             label={`${plan.actions.length} ${plan.actions.length === 1 ? "Action" : "Actions"}`}
             size="small"
             variant="outlined"
@@ -615,7 +678,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               color: "text.secondary",
               border: "1px dashed #cbd5e1",
             }}
-          />
+          /> */}
         </Box>
 
         <List disablePadding>

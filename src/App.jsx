@@ -436,37 +436,39 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
                       direction="row"
                       justifyContent="space-between"
                       alignItems="center"
-                      px={1}
                     >
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <CheckCircleIcon
                           color="success"
-                          sx={{ fontSize: 18 }}
+                          sx={{ fontSize: 16 }}
                         />
                         <Typography
                           variant="caption"
                           fontWeight="bold"
                           color="text.secondary"
+                          sx={{ fontSize: 10 }}
                         >
                           {doneCount} Done
                         </Typography>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={1}>
-                        <AccessTimeIcon color="warning" sx={{ fontSize: 18 }} />
+                        <AccessTimeIcon color="warning" sx={{ fontSize: 16 }} />
                         <Typography
                           variant="caption"
                           fontWeight="bold"
                           color="text.secondary"
+                          sx={{ fontSize: 10 }}
                         >
                           {activeCount} Active
                         </Typography>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={1}>
-                        <CircleIcon color="disabled" sx={{ fontSize: 18 }} />
+                        <CircleIcon color="disabled" sx={{ fontSize: 16 }} />
                         <Typography
                           variant="caption"
                           fontWeight="bold"
                           color="text.secondary"
+                          sx={{ fontSize: 10 }}
                         >
                           {todoCount} To Do
                         </Typography>
@@ -474,12 +476,13 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
                       {canceledCount > 0 && (
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <BlockIcon
-                            sx={{ fontSize: 18, color: "text.disabled" }}
+                            sx={{ fontSize: 16, color: "text.disabled" }}
                           />
                           <Typography
                             variant="caption"
                             fontWeight="bold"
                             color="text.secondary"
+                            sx={{ fontSize: 10 }}
                           >
                             {canceledCount} Canceled
                           </Typography>

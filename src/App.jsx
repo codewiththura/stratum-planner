@@ -169,6 +169,25 @@ const getDaysLeft = (endDate) => {
   return { label: `${diffDays} days left`, color: "success" };
 };
 
+const calculateDuration = (start, end) => {
+  if (!start || !end) return "";
+
+  const startTime = new Date(`2026-01-01T${start}`);
+  const endTime = new Date(`2026-01-01T${end}`);
+
+  let diff = (endTime - startTime) / 1000 / 60;
+
+  if (diff < 0) diff += 24 * 60;
+  const hours = Math.floor(diff / 60);
+  const minutes = diff % 60;
+
+  let result = "";
+  if (hours > 0) result += `${hours} hr `;
+  if (minutes > 0) result += `${minutes} min`;
+
+  return result.trim() || "0 min";
+};
+
 const DeleteConfirmDialog = ({ open, onClose, onConfirm }) => (
   <Dialog
     open={open}
@@ -736,29 +755,61 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                           {action.description}
                         </Typography>
                       )}
-                      {((action.dateType === "specific" &&
-                        action.specificDate) ||
-                        ((!action.dateType || action.dateType === "range") &&
-                          (action.startDate || action.endDate))) && (
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          spacing={0.5}
+
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <EventIcon
+                          sx={{ fontSize: 12, color: "primary.main" }}
+                        />
+                        <Typography
+                          variant="caption"
+                          fontWeight="600"
+                          color="primary.main"
                         >
-                          <EventIcon
-                            sx={{ fontSize: 12, color: "primary.main" }}
-                          />
-                          <Typography
-                            variant="caption"
-                            fontWeight="600"
-                            color="primary.main"
-                          >
-                            {action.dateType === "specific"
-                              ? `${new Date(action.specificDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}${action.duration ? ` • ${action.duration}` : ""}`
-                              : `${action.startDate ? new Date(action.startDate).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "..."} - ${action.endDate ? new Date(action.endDate).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "..."}`}
-                          </Typography>
-                        </Stack>
-                      )}
+                          {action.endDate ? (
+                            // MODE: Date Range (Feb 12 - Feb 14)
+                            `${new Date(action.startDate).toLocaleDateString(
+                              undefined,
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )} - ${new Date(action.endDate).toLocaleDateString(
+                              undefined,
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}`
+                          ) : (
+                            // MODE: Time Slot (Feb 12 • 2 hr)
+                            <>
+                              {new Date(action.startDate).toLocaleDateString(
+                                undefined,
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                              {action.startTime && action.endTime && (
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    ml: 0.5,
+                                    color: "text.secondary",
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  •{" "}
+                                  {calculateDuration(
+                                    action.startTime,
+                                    action.endTime,
+                                  )}
+                                </Box>
+                              )}
+                            </>
+                          )}
+                        </Typography>
+                      </Stack>
                     </Box>
                   }
                   primaryTypographyProps={{
@@ -883,6 +934,16 @@ const FormView = ({
       showMessage("Please provide a Title and Deadline.", "warning");
       return;
     }
+
+    const missingEndTime = formData.actions.some(
+      (a) => a.startTime && !a.endTime,
+    );
+
+    if (missingEndTime) {
+      showMessage("Please provide an End Time for all timed tasks.", "warning");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const cleanActions = formData.actions

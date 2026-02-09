@@ -998,10 +998,15 @@ const FormView = ({
       TransitionProps={{ direction: "up" }}
     >
       <AppBar
-        position="relative"
+        position="sticky"
         color="default"
         elevation={0}
-        sx={{ borderBottom: "1px solid #eee" }}
+        sx={{
+          top: 0,
+          zIndex: 1100,
+          bgcolor: "background.paper",
+          borderBottom: "1px solid #eee",
+        }}
       >
         <Toolbar>
           <IconButton
@@ -1217,6 +1222,7 @@ const FormView = ({
                       <TextField
                         placeholder="Notes..."
                         fullWidth
+                        variant="standard"
                         size="small"
                         multiline
                         value={action.description || ""}

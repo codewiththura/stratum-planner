@@ -170,14 +170,14 @@ const getDaysLeft = (endDate) => {
 };
 
 const calculateDuration = (start, end) => {
-  if (!start || !end) return "";
+  if (!start || !end) return null;
 
   const startTime = new Date(`2026-01-01T${start}`);
   const endTime = new Date(`2026-01-01T${end}`);
 
   let diff = (endTime - startTime) / 1000 / 60;
-
   if (diff < 0) diff += 24 * 60;
+
   const hours = Math.floor(diff / 60);
   const minutes = diff % 60;
 
@@ -341,7 +341,7 @@ const HomeView = ({ user, plans, setView, setSelectedPlanId }) => (
                       mb={2}
                     >
                       <Box sx={{ pr: 1, flex: 1 }}>
-                        <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+                        <Typography variant="h5" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
                           {plan.title}
                         </Typography>
                       </Box>
@@ -788,7 +788,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                   day: "numeric",
                                 },
                               )}
-                              {action.startTime && action.endTime && (
+                              {action.startTime && (
                                 <Box
                                   component="span"
                                   sx={{
@@ -798,10 +798,12 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                   }}
                                 >
                                   •{" "}
-                                  {calculateDuration(
-                                    action.startTime,
-                                    action.endTime,
-                                  )}
+                                  {action.endTime
+                                    ? calculateDuration(
+                                        action.startTime,
+                                        action.endTime,
+                                      )
+                                    : action.startTime}
                                 </Box>
                               )}
                             </>
@@ -953,15 +955,6 @@ const FormView = ({
   const handleSave = async () => {
     if (!formData.title || !formData.endDate) {
       showMessage("Please provide a Title and Deadline.", "warning");
-      return;
-    }
-
-    const missingEndTime = formData.actions.some(
-      (a) => a.startTime && !a.endTime,
-    );
-
-    if (missingEndTime) {
-      showMessage("Please provide an End Time for all timed tasks.", "warning");
       return;
     }
 

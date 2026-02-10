@@ -157,16 +157,30 @@ const theme = createTheme({
 const getDesignTokens = (mode) => ({
   palette: {
     mode,
-    primary: { main: "#3b82f6" }, // Slightly brighter blue for dark mode visibility
-    secondary: { main: mode === "light" ? "#64748b" : "#94a3b8" },
+    primary: {
+      main: mode === "light" ? "#2563eb" : "#3b82f6",
+    },
+    secondary: {
+      main: mode === "light" ? "#64748b" : "#94a3b8",
+    },
+    success: {
+      main: mode === "light" ? "#16a34a" : "#22c55e",
+    },
+    warning: {
+      main: mode === "light" ? "#d97706" : "#f59e0b",
+    },
+    error: {
+      main: mode === "light" ? "#dc2626" : "#f87171",
+    },
     background: {
-      default: mode === "light" ? "#f8fafc" : "#0f172a", // Deep Navy background
-      paper: mode === "light" ? "#ffffff" : "#1e293b", // Lighter Navy for cards
+      default: mode === "light" ? "#f8fafc" : "#0f1214",
+      paper: mode === "light" ? "#ffffff" : "#1a1f24",
     },
     text: {
       primary: mode === "light" ? "#0f172a" : "#f8fafc",
       secondary: mode === "light" ? "#64748b" : "#94a3b8",
     },
+    divider: mode === "light" ? "#e2e8f0" : "#2d333b",
   },
   typography: {
     fontFamily: '"Inter", "Roboto", sans-serif',
@@ -179,16 +193,36 @@ const getDesignTokens = (mode) => ({
         root: {
           borderRadius: 16,
           boxShadow: mode === "light" ? "0 1px 3px rgba(0,0,0,0.05)" : "none",
-          border: mode === "light" ? "1px solid #e2e8f0" : "1px solid #334155",
+          border: mode === "light" ? "1px solid #e2e8f0" : "1px solid #2d333b",
+          transition: "background-color 0.2s ease-in-out", // Smooth transition
+        },
+      },
+    },
+    MuiCardActionArea: {
+      styleOverrides: {
+        focusHighlight: {
+          backgroundColor: mode === "dark" ? "#000" : "inherit",
+        },
+        root: {
+          "&:hover .MuiCardActionArea-focusHighlight": {
+            opacity: mode === "dark" ? 0.15 : 0.04,
+          },
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: mode === "light" ? "#ffffff" : "#0f172a",
+          backgroundColor: mode === "light" ? "#ffffff" : "#0f1214",
           borderBottom:
-            mode === "light" ? "1px solid #e2e8f0" : "1px solid #1e293b",
+            mode === "light" ? "1px solid #e2e8f0" : "1px solid #1a1f24",
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
         },
       },
     },
@@ -808,7 +842,12 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
         minHeight: "100vh",
       }}
     >
-      <AppBar position="sticky" color="inherit" elevation={0}>
+      <AppBar
+        position="sticky"
+        color="inherit"
+        elevation={0}
+        sx={{ bgcolor: "background.paper" }}
+      >
         <Toolbar>
           <IconButton edge="start" onClick={() => setView("home")}>
             <ArrowBackIcon />
@@ -1587,7 +1626,7 @@ const FormView = ({
               left: 0,
               right: 0,
               p: 2,
-              pb: { xs: "calc(25px + env(safe-area-inset-bottom))", sm: 0 },
+              pb: { xs: "calc(25px + env(safe-area-inset-bottom))", sm: 2 },
               display: "flex",
               justifyContent: "center",
               bgcolor: "background.paper",

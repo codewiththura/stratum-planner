@@ -376,14 +376,14 @@ const LoginView = () => (
     <Box sx={{ p: 2, bgcolor: "primary.main", borderRadius: 4, mb: 3 }}>
       <BarChartIcon sx={{ fontSize: 40, color: "white" }} />
     </Box>
-    <Typography variant="h5" fontWeight="800" gutterBottom>
+    <Typography variant="h5" fontWeight="800" align="center" gutterBottom>
       Stratum - The Action Planner
     </Typography>
     <Typography
       variant="body2"
       color="text.secondary"
       align="center"
-      sx={{ mb: 6, maxWidth: 300 }}
+      sx={{ mb: 6, mt: 2, maxWidth: 300 }}
     >
       Professional goal tracker that breaks big ambitions into scheduled
       sub-actions.

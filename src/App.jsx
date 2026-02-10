@@ -57,6 +57,8 @@ import {
   Divider,
   Snackbar,
   Alert,
+  Switch,
+  FormControlLabel,
   ToggleButton,
   ToggleButtonGroup,
   DialogTitle,
@@ -85,6 +87,7 @@ import {
   Task as TaskIcon,
   AccessTimeFilled as AccessTimeFilledIcon,
   Home as HomeIcon,
+  HourglassBottom as HourglassBottomIcon,
   History as HistoryIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
@@ -284,15 +287,7 @@ const clampDate = (dateStr, minDate, maxDate) => {
 };
 
 const SharedHeader = ({ title, user }) => (
-  <AppBar
-    position="sticky"
-    color="default"
-    elevation={0}
-    sx={{
-      bgcolor: "background.default",
-      borderBottom: "1px solid #e2e8f0",
-    }}
-  >
+  <AppBar position="sticky" color="default" elevation={0}>
     <Toolbar sx={{ py: 0.5 }}>
       <Box
         sx={{
@@ -484,7 +479,12 @@ const HomeView = ({
   const isFiltered = sortConfig.key !== "startDate";
 
   return (
-    <Box sx={{ pb: 12 }}>
+    <Box
+      sx={{
+        pb: "calc(80px + env(safe-area-inset-bottom))",
+        minHeight: "100vh",
+      }}
+    >
       <SharedHeader title="Dashboard" user={user} />
       <Container maxWidth="sm" sx={{ pt: 3 }}>
         <Stack
@@ -810,13 +810,13 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   const daysMeta = getDaysLeft(plan.endDate);
 
   return (
-    <Box sx={{ pb: 12, minHeight: "100vh", bgcolor: "background.paper" }}>
-      <AppBar
-        position="sticky"
-        color="inherit"
-        elevation={0}
-        sx={{ borderBottom: "1px solid #f1f5f9" }}
-      >
+    <Box
+      sx={{
+        pb: "calc(80px + env(safe-area-inset-bottom))",
+        minHeight: "100vh",
+      }}
+    >
+      <AppBar position="sticky" color="inherit" elevation={0}>
         <Toolbar>
           <IconButton edge="start" onClick={() => setView("home")}>
             <ArrowBackIcon />
@@ -841,16 +841,15 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             direction="row"
             flexWrap="wrap"
             alignItems="center"
-            spacing={1}
+            spacing={2}
             mb={2}
           >
-            <Chip
-              icon={<EventIcon sx={{ fontSize: "1rem !important" }} />}
-              label={`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`}
+            <Typography
               size="small"
-              variant="outlined"
-              sx={{ color: "text.secondary" }}
-            />
+              sx={{ color: "text.secondary", fontSize: 14 }}
+            >
+              {`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`}
+            </Typography>
             <Chip
               label={daysMeta.label}
               size="small"
@@ -878,7 +877,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               mt: 3,
               p: 1.5,
               borderRadius: 3,
-              bgcolor: "#f8fafc",
+              bgcolor: "action.hover",
               borderStyle: "dashed",
             }}
           >
@@ -942,11 +941,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           {plan.actions.map((action, idx) => {
             const isDone = action.status === STATUS.FINISHED;
             return (
-              <ListItem
-                key={idx}
-                disableGutters
-                sx={{ borderBottom: "1px solid #f8fafc", py: 1 }}
-              >
+              <ListItem key={idx} disableGutters sx={{ py: 1 }}>
                 <ListItemIcon
                   sx={{ minWidth: 40 }}
                   onClick={() => updateStatus(plan.id, idx, action.status)}
@@ -1002,13 +997,15 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                         spacing={0.5}
                         sx={{ mt: 1 }}
                       >
-                        <EventIcon
-                          sx={{ fontSize: 12, color: "primary.main" }}
-                        />
+                        <EventIcon sx={{ fontSize: 12 }} />
                         <Typography
                           variant="caption"
-                          fontWeight="600"
-                          color="primary.main"
+                          fontWeight="500"
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
                         >
                           {action.endDate ? (
                             `${new Date(action.startDate).toLocaleDateString(
@@ -1040,15 +1037,28 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                     ml: 0.5,
                                     color: "text.secondary",
                                     fontWeight: 500,
+                                    display: "inline-flex",
+                                    alignItems: "center",
                                   }}
                                 >
-                                  •{" "}
-                                  {action.endTime
-                                    ? calculateDuration(
+                                  {" "}
+                                  {action.endTime ? (
+                                    <>
+                                      <HourglassBottomIcon
+                                        sx={{
+                                          fontSize: 12,
+                                          mx: 0.5,
+                                          color: "text.secondary",
+                                        }}
+                                      />
+                                      {calculateDuration(
                                         action.startTime,
                                         action.endTime,
-                                      )
-                                    : action.startTime}
+                                      )}
+                                    </>
+                                  ) : (
+                                    action.startTime
+                                  )}
                                 </Box>
                               )}
                             </>
@@ -1227,12 +1237,23 @@ const FormView = ({
     setTaskToDelete(null);
   };
 
+  const inputIconStyles = {
+    "& .MuiInputBase-input::-webkit-calendar-picker-indicator": {
+      filter: (theme) =>
+        theme.palette.mode === "dark" ? "invert(1) brightness(100%)" : "none",
+      cursor: "pointer",
+    },
+  };
+
   return (
     <Dialog
       fullScreen
       open={true}
       TransitionComponent={Slide}
       TransitionProps={{ direction: "up" }}
+      PaperProps={{
+        sx: { bgcolor: "background.default", backgroundImage: "none" },
+      }}
     >
       <AppBar
         position="sticky"
@@ -1242,7 +1263,8 @@ const FormView = ({
           top: 0,
           zIndex: 1100,
           bgcolor: "background.paper",
-          borderBottom: "1px solid #eee",
+          borderBottom: 1,
+          borderColor: "divider",
         }}
       >
         <Toolbar>
@@ -1304,6 +1326,7 @@ const FormView = ({
                   label="Start"
                   fullWidth
                   value={formData.startDate}
+                  sx={inputIconStyles}
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
@@ -1314,6 +1337,7 @@ const FormView = ({
                   label="Deadline"
                   fullWidth
                   value={formData.endDate}
+                  sx={inputIconStyles}
                   onChange={(e) =>
                     setFormData({ ...formData, endDate: e.target.value })
                   }
@@ -1321,7 +1345,7 @@ const FormView = ({
                 />
               </Stack>
               <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" color="primary">
+              <Typography variant="subtitle2" color="text.secondary">
                 ACTION TASKS
               </Typography>
               {formData.actions.map((action, idx) => {
@@ -1332,7 +1356,13 @@ const FormView = ({
                   <Paper
                     key={idx}
                     variant="outlined"
-                    sx={{ p: 2.5, mb: 2, borderRadius: 3 }}
+                    sx={{
+                      p: 2.5,
+                      mb: 2,
+                      borderRadius: 3,
+                      bgcolor: "background.paper",
+                      borderColor: "divider",
+                    }}
                   >
                     <Stack
                       direction="row"
@@ -1363,34 +1393,48 @@ const FormView = ({
                       </IconButton>
                     </Stack>
 
-                    <ToggleButtonGroup
-                      value={scheduleMode}
-                      exclusive
-                      size="small"
-                      onChange={(_, mode) => {
-                        if (!mode) return;
-
-                        if (mode === "range") {
-                          updateActionField(idx, {
-                            startTime: "",
-                            endTime: "",
-                          });
-                        } else {
-                          updateActionField(idx, {
-                            endDate: "",
-                            startTime: "09:00",
-                          });
-                        }
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        mb: 1,
+                        mr: 1,
                       }}
-                      sx={{ mb: 2, display: "flex" }}
                     >
-                      <ToggleButton value="range" sx={{ flex: 1 }}>
-                        Date Range
-                      </ToggleButton>
-                      <ToggleButton value="time" sx={{ flex: 1 }}>
-                        Time Slot
-                      </ToggleButton>
-                    </ToggleButtonGroup>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            size="small"
+                            checked={scheduleMode === "time"}
+                            onChange={(e) => {
+                              const mode = e.target.checked ? "time" : "range";
+                              if (mode === "range") {
+                                updateActionField(idx, {
+                                  startTime: "",
+                                  endTime: "",
+                                });
+                              } else {
+                                updateActionField(idx, {
+                                  endDate: "",
+                                  startTime: "09:00",
+                                });
+                              }
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: 700, color: "text.secondary" }}
+                          >
+                            {scheduleMode === "time"
+                              ? "Time Slot"
+                              : "Date Range"}
+                          </Typography>
+                        }
+                        labelPlacement="start"
+                      />
+                    </Box>
 
                     <Stack spacing={2}>
                       <TextField
@@ -1398,6 +1442,7 @@ const FormView = ({
                         label="Date"
                         fullWidth
                         size="small"
+                        sx={inputIconStyles}
                         value={action.startDate || ""}
                         inputProps={{
                           min: formData.startDate,
@@ -1415,6 +1460,7 @@ const FormView = ({
                           label="End Date"
                           fullWidth
                           size="small"
+                          sx={inputIconStyles}
                           value={action.endDate || ""}
                           inputProps={{
                             min: action.startDate || formData.startDate,
@@ -1432,6 +1478,7 @@ const FormView = ({
                             label="From"
                             fullWidth
                             size="small"
+                            sx={inputIconStyles}
                             value={action.startTime || ""}
                             onChange={(e) =>
                               updateActionField(
@@ -1447,6 +1494,7 @@ const FormView = ({
                             label="To"
                             fullWidth
                             size="small"
+                            sx={inputIconStyles}
                             value={action.endTime || ""}
                             onChange={(e) =>
                               updateActionField(idx, "endTime", e.target.value)
@@ -1471,12 +1519,16 @@ const FormView = ({
 
                     {action.status === STATUS.FINISHED && (
                       <Box
-                        sx={{ mt: 2, pt: 2, borderTop: "1px solid #f1f5f9" }}
+                        sx={{
+                          mt: 2,
+                          pt: 2,
+                          borderTop: "1px solid",
+                          borderColor: "divider",
+                        }}
                       >
                         <Typography
                           variant="caption"
                           fontWeight="bold"
-                          color="success.main"
                           sx={{ mb: 2, display: "block" }}
                         >
                           COMPLETION (LOGGED)
@@ -1486,6 +1538,7 @@ const FormView = ({
                             type="date"
                             label="Actual Date"
                             fullWidth
+                            sx={inputIconStyles}
                             size="small"
                             value={action.actualDate || ""}
                             onChange={(e) =>
@@ -1501,6 +1554,7 @@ const FormView = ({
                             type="time"
                             label="Actual Time"
                             fullWidth
+                            sx={inputIconStyles}
                             size="small"
                             value={action.actualTime || ""}
                             onChange={(e) =>
@@ -1538,6 +1592,11 @@ const FormView = ({
               p: 2,
               display: "flex",
               justifyContent: "center",
+              bgcolor: "background.paper",
+              backgroundImage: "none",
+              borderTop: 1,
+              borderColor: "divider",
+              zIndex: 100,
             }}
           >
             <Button
@@ -1686,7 +1745,12 @@ const HistoryView = ({ user, plans, setView }) => {
   }, [plans, historySort]);
 
   return (
-    <Box sx={{ pb: 10 }}>
+    <Box
+      sx={{
+        pb: "calc(80px + env(safe-area-inset-bottom))",
+        minHeight: "100vh",
+      }}
+    >
       <SharedHeader title="Completed Actions" user={user} />
       <Container maxWidth="sm" sx={{ pt: 3 }}>
         <Stack
@@ -1801,8 +1865,7 @@ const HistoryView = ({ user, plans, setView }) => {
                               ml: 0.5,
                             }}
                           >
-                            •
-                            <AccessTimeIcon
+                            <HourglassBottomIcon
                               sx={{
                                 fontSize: 12,
                                 mx: 0.5,
@@ -2327,13 +2390,25 @@ const App = () => {
           onConfirm={handleConfirmDelete}
         />
         <Paper
-          sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            pb: "env(safe-area-inset-bottom)",
+            bgcolor: "background.paper",
+            backgroundImage: "none",
+            borderTop: 1,
+            borderColor: "divider",
+            zIndex: 1000,
+          }}
           elevation={3}
         >
           <BottomNavigation
             value={view}
             onChange={(event, newValue) => setView(newValue)}
             showLabels
+            sx={{ bgcolor: "transparent" }}
           >
             <BottomNavigationAction
               label="Home"

@@ -1590,6 +1590,7 @@ const FormView = ({
               left: 0,
               right: 0,
               p: 2,
+              pb: { xs: "calc(25px + env(safe-area-inset-bottom))", sm: 0 },
               display: "flex",
               justifyContent: "center",
               bgcolor: "background.paper",
@@ -2108,6 +2109,26 @@ const App = () => {
 
   useEffect(() => {
     localStorage.setItem("themeMode", mode);
+
+    const themeColor = mode === "dark" ? "#0f172a" : "#f8fafc";
+    const barStyle = mode === "dark" ? "black-translucent" : "default";
+
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (!metaTheme) {
+      metaTheme = document.createElement("meta");
+      metaTheme.name = "theme-color";
+      document.head.appendChild(metaTheme);
+    }
+    metaTheme.setAttribute("content", themeColor);
+    let metaApple = document.querySelector(
+      'meta[name="apple-mobile-web-app-status-bar-style"]',
+    );
+    if (!metaApple) {
+      metaApple = document.createElement("meta");
+      metaApple.name = "apple-mobile-web-app-status-bar-style";
+      document.head.appendChild(metaApple);
+    }
+    metaApple.setAttribute("content", barStyle);
   }, [mode]);
 
   const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
@@ -2395,7 +2416,7 @@ const App = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            pb: "env(safe-area-inset-bottom)",
+            pb: { xs: "calc(14px + env(safe-area-inset-bottom))", sm: 0 },
             bgcolor: "background.paper",
             backgroundImage: "none",
             borderTop: 1,

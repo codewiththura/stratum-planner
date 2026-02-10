@@ -22,7 +22,9 @@ export default defineConfig({
         name: "Action Planner",
         short_name: "Stratum",
         description: "Break big goals into scheduled sub-actions.",
-        theme_color: "#ffffff",
+        theme_color: "#f8fafc",
+        background_color: "#f8fafc",
+        display: "standalone",
         icons: [
           {
             src: "web-app-manifest-192x192.png",

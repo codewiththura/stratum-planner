@@ -173,12 +173,12 @@ const getDesignTokens = (mode) => ({
       main: mode === "light" ? "#dc2626" : "#f87171",
     },
     background: {
-      default: mode === "light" ? "#f8fafc" : "#0f1214",
-      paper: mode === "light" ? "#ffffff" : "#1a1f24",
+      default: mode === "light" ? "#f8fafc" : "#020617",
+      paper: mode === "light" ? "#ffffff" : "#020617",
     },
     text: {
       primary: mode === "light" ? "#0f172a" : "#f8fafc",
-      secondary: mode === "light" ? "#64748b" : "#94a3b8",
+      secondary: mode === "light" ? "#475569" : "#cbd5e1",
     },
     divider: mode === "light" ? "#e2e8f0" : "#2d333b",
   },
@@ -191,21 +191,30 @@ const getDesignTokens = (mode) => ({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: mode === "light" ? "0 1px 3px rgba(0,0,0,0.05)" : "none",
-          border: mode === "light" ? "1px solid #e2e8f0" : "1px solid #2d333b",
-          transition: "background-color 0.2s ease-in-out", // Smooth transition
+          borderRadius: 12,
+          backgroundColor: mode === "light" ? "#ffffff" : "#020617",
+          boxShadow:
+            mode === "light"
+              ? "0 1px 2px rgba(15, 23, 42, 0.06)"
+              : "0 0 0 1px rgba(148, 163, 184, 0.08)",
+          border: mode === "light" ? "1px solid #e2e8f0" : "1px solid #1e293b",
+          transition:
+            "background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
         },
       },
     },
     MuiCardActionArea: {
       styleOverrides: {
         focusHighlight: {
-          backgroundColor: mode === "dark" ? "#000" : "inherit",
+          backgroundColor: mode === "light" ? "#2563eb" : "#38bdf8",
         },
         root: {
+          borderRadius: 12,
           "&:hover .MuiCardActionArea-focusHighlight": {
-            opacity: mode === "dark" ? 0.15 : 0.04,
+            opacity: mode === "light" ? 0.04 : 0.08,
+          },
+          "&.Mui-focusVisible .MuiCardActionArea-focusHighlight": {
+            opacity: mode === "light" ? 0.12 : 0.16,
           },
         },
       },
@@ -213,9 +222,12 @@ const getDesignTokens = (mode) => ({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: mode === "light" ? "#ffffff" : "#0f1214",
+          backgroundColor: mode === "light" ? "#ffffff" : "#020617",
+          color: mode === "light" ? "#0f172a" : "#f8fafc",
+          boxShadow: "none",
           borderBottom:
-            mode === "light" ? "1px solid #e2e8f0" : "1px solid #1a1f24",
+            mode === "light" ? "1px solid #e2e8f0" : "1px solid #1e293b",
+          backdropFilter: "saturate(180%) blur(6px)",
         },
       },
     },
@@ -602,23 +614,12 @@ const HomeView = ({
                       </Box>
                       <Chip
                         label={daysMeta.label}
-                        color={
-                          daysMeta.color === "success"
-                            ? "default"
-                            : daysMeta.color
-                        }
                         size="small"
                         sx={{
                           fontWeight: 700,
                           flexShrink: 0,
-                          bgcolor:
-                            daysMeta.color === "success"
-                              ? "#f1f5f9"
-                              : undefined,
-                          color:
-                            daysMeta.color === "success"
-                              ? "#64748b"
-                              : undefined,
+                          color: `${daysMeta.color}.main`,
+                          bgcolor: daysMeta.color,
                         }}
                       />
                     </Stack>
@@ -697,19 +698,19 @@ const HomeView = ({
                         <Typography
                           variant="caption"
                           color="primary"
-                          sx={{ pl: 3.5, fontWeight: 600 }}
+                          sx={{ pl: 3.5, fontWeight: 400 }}
                         >
                           + {remainingActions} more items
                         </Typography>
                       )}
                     </Stack>
 
-                    <Divider sx={{ mb: 2 }} />
+                    {/* <Divider sx={{ mb: 2 }} />
 
                     <Stack
                       direction="row"
                       alignItems="center"
-                      justifyContent="space-between"
+                      justifyContent="space-evenly"
                       sx={{ width: "100%", px: 0.5 }}
                       divider={
                         <Typography
@@ -725,7 +726,7 @@ const HomeView = ({
                         fontWeight="700"
                         color="text.disabled"
                       >
-                        {doneCount} Done
+                        {doneCount} Completed
                       </Typography>
 
                       <Typography
@@ -733,7 +734,7 @@ const HomeView = ({
                         fontWeight="700"
                         color="text.disabled"
                       >
-                        {activeCount} Active
+                        {activeCount} Pending
                       </Typography>
 
                       <Typography
@@ -741,19 +742,17 @@ const HomeView = ({
                         fontWeight="700"
                         color="text.disabled"
                       >
-                        {todoCount} To Do
+                        {canceledCount} Canceled
                       </Typography>
 
-                      {canceledCount > 0 && (
-                        <Typography
-                          variant="caption"
-                          fontWeight="700"
-                          color="text.disabled"
-                        >
-                          {canceledCount} Canceled
-                        </Typography>
-                      )}
-                    </Stack>
+                      <Typography
+                        variant="caption"
+                        fontWeight="700"
+                        color="text.disabled"
+                      >
+                        {todoCount} Total
+                      </Typography>
+                    </Stack> */}
                   </CardContent>
                 </CardActionArea>
               </Card>
@@ -830,6 +829,9 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
     (a) => a.status === STATUS.CANCELED,
   ).length;
 
+  const remainingCount =
+    totalActions - (doneCount + pendingCount + todoCount + canceledCount);
+
   const validActionsCount = totalActions - canceledCount;
   const progress =
     validActionsCount > 0 ? (doneCount / validActionsCount) * 100 : 0;
@@ -885,9 +887,14 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               label={daysMeta.label}
               size="small"
               variant="filled"
-              color={daysMeta.color === "success" ? "success" : daysMeta.color}
-              sx={{ fontWeight: 700 }}
+              sx={{
+                fontWeight: 700,
+                flexShrink: 0,
+                color: `${daysMeta.color}.main`,
+                bgcolor: daysMeta.color,
+              }}
             />
+
             <Typography
               variant="caption"
               fontWeight="bold"
@@ -932,6 +939,11 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               <StatItem
                 label="Canceled"
                 value={canceledCount}
+                color="text.disabled"
+              />
+              <StatItem
+                label="Remaining"
+                value={remainingCount}
                 color="text.disabled"
               />
             </Stack>
@@ -1012,9 +1024,9 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                       {action.description && (
                         <Typography
                           variant="caption"
+                          color="textDisabled"
                           sx={{
                             fontStyle: "italic",
-                            color: "text.secondary",
                             pl: 1,
                             borderLeft: "2px solid",
                             borderColor: "divider",
@@ -1032,10 +1044,11 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                         spacing={0.5}
                         sx={{ mt: 1 }}
                       >
-                        <EventIcon sx={{ fontSize: 12 }} />
+                        <EventIcon sx={{ fontSize: 12, color: "text.disabled"}}/>
                         <Typography
                           variant="caption"
                           fontWeight="500"
+                          color="textDisabled"
                           sx={{
                             display: "flex",
                             alignItems: "center",
@@ -1070,7 +1083,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                   component="span"
                                   sx={{
                                     ml: 0.5,
-                                    color: "text.secondary",
+                                    color: "disabled",
                                     fontWeight: 500,
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -1083,7 +1096,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                         sx={{
                                           fontSize: 12,
                                           mx: 0.5,
-                                          color: "text.secondary",
+                                          color: "text.disabled",
                                         }}
                                       />
                                       {calculateDuration(

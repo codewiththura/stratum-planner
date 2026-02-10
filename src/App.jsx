@@ -214,7 +214,7 @@ const getDaysLeft = (endDate) => {
   if (diffDays < 0)
     return { label: `${Math.abs(diffDays)}d Overdue`, color: "error" };
   if (diffDays === 0) return { label: "Due Today", color: "warning" };
-  if (diffDays === 1) return { label: "Tomorrow", color: "warning" };
+  if (diffDays === 1) return { label: "Due Tomorrow", color: "warning" };
   if (diffDays <= 3)
     return { label: `${diffDays} days left`, color: "warning" };
   return { label: `${diffDays} days left`, color: "success" };
@@ -674,59 +674,50 @@ const HomeView = ({
 
                     <Stack
                       direction="row"
-                      justifyContent="space-between"
                       alignItems="center"
+                      justifyContent="space-between"
+                      sx={{ width: "100%", px: 0.5 }}
+                      divider={
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "divider", fontWeight: 300, mx: 0.5 }}
+                        >
+                          |
+                        </Typography>
+                      }
                     >
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <CheckCircleIcon
-                          color="success"
-                          sx={{ fontSize: 16 }}
-                        />
-                        <Typography
-                          variant="caption"
-                          fontWeight="bold"
-                          color="text.secondary"
-                          sx={{ fontSize: 10 }}
-                        >
-                          {doneCount} Done
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <AccessTimeIcon color="warning" sx={{ fontSize: 16 }} />
-                        <Typography
-                          variant="caption"
-                          fontWeight="bold"
-                          color="text.secondary"
-                          sx={{ fontSize: 10 }}
-                        >
-                          {activeCount} Active
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <CircleIcon color="disabled" sx={{ fontSize: 16 }} />
-                        <Typography
-                          variant="caption"
-                          fontWeight="bold"
-                          color="text.secondary"
-                          sx={{ fontSize: 10 }}
-                        >
-                          {todoCount} To Do
-                        </Typography>
-                      </Stack>
+                      <Typography
+                        variant="caption"
+                        fontWeight="700"
+                        color="text.disabled"
+                      >
+                        {doneCount} Done
+                      </Typography>
+
+                      <Typography
+                        variant="caption"
+                        fontWeight="700"
+                        color="text.disabled"
+                      >
+                        {activeCount} Active
+                      </Typography>
+
+                      <Typography
+                        variant="caption"
+                        fontWeight="700"
+                        color="text.disabled"
+                      >
+                        {todoCount} To Do
+                      </Typography>
+
                       {canceledCount > 0 && (
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <BlockIcon
-                            sx={{ fontSize: 16, color: "text.disabled" }}
-                          />
-                          <Typography
-                            variant="caption"
-                            fontWeight="bold"
-                            color="text.secondary"
-                            sx={{ fontSize: 10 }}
-                          >
-                            {canceledCount} Canceled
-                          </Typography>
-                        </Stack>
+                        <Typography
+                          variant="caption"
+                          fontWeight="700"
+                          color="text.disabled"
+                        >
+                          {canceledCount} Canceled
+                        </Typography>
                       )}
                     </Stack>
                   </CardContent>
@@ -774,6 +765,7 @@ const StatItem = ({ label, value, color }) => (
       fontWeight="700"
       color="text.secondary"
       display="block"
+      pb={0.6}
       sx={{ textTransform: "uppercase", fontSize: "0.6rem" }}
     >
       {label}
@@ -889,17 +881,17 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             >
               <StatItem
                 label="Total"
+                color="text.disabled"
                 value={totalActions}
-                color="text.primary"
               />
-              <StatItem label="Done" value={doneCount} color="success.main" />
+              <StatItem label="Done" value={doneCount} color="text.disabled" />
               <StatItem
                 label="Active"
+                color="text.disabled"
                 value={pendingCount}
-                color="warning.main"
               />
               <StatItem
-                label="Skipped"
+                label="Canceled"
                 value={canceledCount}
                 color="text.disabled"
               />
@@ -960,14 +952,15 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                   primary={
                     <Typography
                       variant="body1"
-                      fontWeight="700"
+                      fontWeight="500"
                       sx={{
                         textDecoration:
                           action.status === STATUS.FINISHED
                             ? "line-through"
                             : "none",
                         color:
-                          action.status === STATUS.FINISHED
+                          action.status === STATUS.FINISHED ||
+                          action.status == STATUS.CANCELED
                             ? "text.disabled"
                             : "text.primary",
                       }}
@@ -984,7 +977,10 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                             fontStyle: "italic",
                             color: "text.secondary",
                             pl: 1,
-                            borderLeft: "2px solid #eee",
+                            borderLeft: "2px solid",
+                            borderColor: "divider",
+                            mt: 0.5,
+                            display: "block",
                           }}
                         >
                           {action.description}
@@ -1510,6 +1506,7 @@ const FormView = ({
                         variant="standard"
                         size="small"
                         multiline
+                        mt={1}
                         value={action.description || ""}
                         onChange={(e) =>
                           updateActionField(idx, "description", e.target.value)

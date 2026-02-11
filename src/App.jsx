@@ -91,6 +91,8 @@ import {
   History as HistoryIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
+  ArrowDropDown as ArrowDropDownIcon,
+  ArrowDropUp as ArrowDropUpIcon,
 } from "@mui/icons-material";
 
 // --- Firebase Config ---
@@ -109,133 +111,71 @@ const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 
-// --- Theme ---
-const theme = createTheme({
-  palette: {
-    primary: { main: "#2563eb" },
-    secondary: { main: "#64748b" },
-    success: { main: "#10b981" },
-    warning: { main: "#f59e0b" },
-    error: { main: "#ef4444" },
-    background: { default: "#f8fafc", paper: "#ffffff" },
-    text: { primary: "#0f172a", secondary: "#64748b" },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", sans-serif',
-    h6: { fontWeight: 700, fontSize: "1.1rem", letterSpacing: "-0.01em" },
-    subtitle2: { fontWeight: 600, fontSize: "0.875rem" },
-    caption: { fontSize: "0.75rem", fontWeight: 500 },
-    button: { textTransform: "none", fontWeight: 600 },
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          border: "1px solid #e2e8f0",
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: { fontWeight: 600, borderRadius: 8 },
-        sizeSmall: { height: 24, fontSize: "0.7rem" },
-      },
-    },
-    MuiButton: {
-      styleOverrides: { root: { borderRadius: 50 } },
-    },
-    MuiFab: {
-      styleOverrides: {
-        root: { boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)" },
-      },
-    },
-  },
-});
-
 const getDesignTokens = (mode) => ({
   palette: {
     mode,
     primary: {
-      main: mode === "light" ? "#2563eb" : "#3b82f6",
+      main: mode === "light" ? "#2563eb" : "#0a57d1",
+      contrastText: "#ffffff",
     },
-    secondary: {
-      main: mode === "light" ? "#64748b" : "#94a3b8",
-    },
-    success: {
-      main: mode === "light" ? "#16a34a" : "#22c55e",
-    },
-    warning: {
-      main: mode === "light" ? "#d97706" : "#f59e0b",
-    },
-    error: {
-      main: mode === "light" ? "#dc2626" : "#f87171",
-    },
+    // secondary: {
+    //   main: mode === "light" ? "#64748b" : "#9aa0a6",
+    // },
     background: {
-      default: mode === "light" ? "#f8fafc" : "#020617",
-      paper: mode === "light" ? "#ffffff" : "#020617",
+      default: mode === "light" ? "#f8fafc" : "#1c1c1c",
+      paper: mode === "light" ? "#ffffff" : "#131314",
     },
     text: {
-      primary: mode === "light" ? "#0f172a" : "#f8fafc",
-      secondary: mode === "light" ? "#475569" : "#cbd5e1",
+      primary: mode === "light" ? "#0f172a" : "#e3e3e3",
+      secondary: mode === "light" ? "#475569" : "#9aa0a6",
     },
-    divider: mode === "light" ? "#e2e8f0" : "#2d333b",
+    divider: mode === "light" ? "#e2e8f0" : "#3c4043",
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", sans-serif',
-    h6: { fontWeight: 700, fontSize: "1.1rem" },
-    button: { textTransform: "none", fontWeight: 600 },
+    fontFamily: '"Google Sans", "Inter", "Roboto", sans-serif',
+    h6: { fontWeight: 500, letterSpacing: 0 },
+    button: { textTransform: "none", fontWeight: 500 },
   },
   components: {
     MuiCard: {
       styleOverrides: {
-        root: {
-          borderRadius: 12,
-          backgroundColor: mode === "light" ? "#ffffff" : "#020617",
-          boxShadow:
-            mode === "light"
-              ? "0 1px 2px rgba(15, 23, 42, 0.06)"
-              : "0 0 0 1px rgba(148, 163, 184, 0.08)",
-          border: mode === "light" ? "1px solid #e2e8f0" : "1px solid #1e293b",
-          transition:
-            "background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
-        },
+        root: ({ theme }) => ({
+          borderRadius: 14,
+          border: `1px solid ${theme.palette.divider}`,
+          "&:hover": {
+            boxShadow:
+              theme.palette.mode === "light"
+                ? "0 6px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)"
+                : "0 8px 24px rgba(0, 0, 0, 0.5)",
+            backgroundColor: theme.palette.background.paper,
+          },
+        }),
       },
     },
     MuiCardActionArea: {
       styleOverrides: {
-        focusHighlight: {
-          backgroundColor: mode === "light" ? "#2563eb" : "#38bdf8",
-        },
         root: {
-          borderRadius: 12,
           "&:hover .MuiCardActionArea-focusHighlight": {
-            opacity: mode === "light" ? 0.04 : 0.08,
+            opacity: 0,
           },
-          "&.Mui-focusVisible .MuiCardActionArea-focusHighlight": {
-            opacity: mode === "light" ? 0.12 : 0.16,
-          },
+        },
+        focusHighlight: {
+          backgroundColor: "transparent",
         },
       },
     },
-    MuiAppBar: {
+    MuiSelect: {
       styleOverrides: {
-        root: {
-          backgroundColor: mode === "light" ? "#ffffff" : "#020617",
-          color: mode === "light" ? "#0f172a" : "#f8fafc",
-          boxShadow: "none",
-          borderBottom:
-            mode === "light" ? "1px solid #e2e8f0" : "1px solid #1e293b",
-          backdropFilter: "saturate(180%) blur(6px)",
+        select: {
+          fontSize: "0.8125rem",
         },
       },
     },
-    MuiPaper: {
+    MuiMenuItem: {
       styleOverrides: {
-        root: {
-          backgroundImage: "none",
-        },
+        root: ({ theme }) => ({
+          fontSize: "0.8125rem",
+        }),
       },
     },
   },
@@ -259,8 +199,8 @@ const getDaysLeft = (endDate) => {
 
   if (diffDays < 0)
     return { label: `${Math.abs(diffDays)}d Overdue`, color: "error" };
-  if (diffDays === 0) return { label: "Due Today", color: "warning" };
-  if (diffDays === 1) return { label: "Due Tomorrow", color: "warning" };
+  if (diffDays === 0) return { label: "Due today", color: "warning" };
+  if (diffDays === 1) return { label: "Due tomorrow", color: "warning" };
   if (diffDays <= 3)
     return { label: `${diffDays} days left`, color: "warning" };
   return { label: `${diffDays} days left`, color: "success" };
@@ -333,7 +273,7 @@ const clampDate = (dateStr, minDate, maxDate) => {
 };
 
 const SharedHeader = ({ title, user }) => (
-  <AppBar position="sticky" color="default" elevation={0}>
+  <AppBar position="sticky" color="inherit" elevation={0}>
     <Toolbar sx={{ py: 0.5 }}>
       <Box
         sx={{
@@ -407,18 +347,6 @@ const SortDrawer = ({
   title,
   options,
 }) => {
-  // Fallback to dashboard options if none provided
-  const displayOptions = options || [
-    { label: "Start Date", key: "startDate", icon: <EventIcon /> },
-    { label: "Progress Level", key: "progress", icon: <BarChartIcon /> },
-    {
-      label: "Urgency (Days Left)",
-      key: "daysLeft",
-      icon: <AccessTimeFilledIcon />,
-    },
-    { label: "Number of Tasks", key: "actions", icon: <TaskIcon /> },
-  ];
-
   return (
     <Drawer
       anchor="bottom"
@@ -429,16 +357,12 @@ const SortDrawer = ({
       }}
     >
       <Box sx={{ width: "100%", maxWidth: 500, mx: "auto" }}>
-        <Typography
-          variant="subtitle1"
-          fontWeight="600"
-          sx={{ mb: 2, textAlign: "center" }}
-        >
+        <Typography sx={{ mb: 2, textAlign: "center" }}>
           {title || "Sort By"}
         </Typography>
 
         <List sx={{ mb: 2 }}>
-          {displayOptions.map((option) => (
+          {options.map((option) => (
             <ListItem key={option.key} disablePadding>
               <ListItemButton
                 selected={sortConfig.key === option.key}
@@ -447,7 +371,7 @@ const SortDrawer = ({
                 }
                 sx={{ borderRadius: 2, mb: 0.5 }}
               >
-                <ListItemIcon
+                {/* <ListItemIcon
                   sx={{
                     color:
                       sortConfig.key === option.key
@@ -456,30 +380,14 @@ const SortDrawer = ({
                   }}
                 >
                   {option.icon || <SortIcon />}
-                </ListItemIcon>
-                <ListItemText
-                  primary={option.label}
-                  primaryTypographyProps={{
-                    fontWeight: sortConfig.key === option.key ? 700 : 500,
-                  }}
-                />
-                {sortConfig.key === option.key && (
-                  <CheckCircleIcon color="primary" fontSize="small" />
-                )}
+                </ListItemIcon> */}
+                <ListItemText primary={option.label} />
               </ListItemButton>
             </ListItem>
           ))}
         </List>
 
         <Divider sx={{ mb: 2 }} />
-        <Typography
-          variant="caption"
-          fontWeight="700"
-          color="text.secondary"
-          sx={{ display: "block", mb: 1, ml: 1 }}
-        >
-          ORDER
-        </Typography>
         <ToggleButtonGroup
           value={sortConfig.direction}
           exclusive
@@ -515,15 +423,6 @@ const HomeView = ({
 }) => {
   const [isSortOpen, setIsSortOpen] = React.useState(false);
 
-  const sortLabels = {
-    startDate: "Start Date",
-    progress: "Progress",
-    daysLeft: "Urgency",
-    actions: "Tasks",
-  };
-
-  const isFiltered = sortConfig.key !== "startDate";
-
   return (
     <Box
       sx={{
@@ -551,17 +450,23 @@ const HomeView = ({
           </Typography>
 
           <Button
-            variant={isFiltered ? "soft" : "text"}
             onClick={() => setIsSortOpen(true)}
             size="small"
             startIcon={<SortIcon />}
+            variant="outlined"
             sx={{
-              color: "primary.main",
-              borderRadius: "10px",
-              fontWeight: 500,
+              fontSize: "0.8125rem",
             }}
           >
-            {sortLabels[sortConfig.key]} ({sortConfig.direction.toUpperCase()})
+            {(() => {
+              const labels = {
+                startDate: "Start Date",
+                progress: "Progress",
+                daysLeft: "Urgency",
+                actions: "Tasks",
+              };
+              return `${labels[sortConfig.key]}`;
+            })()}
           </Button>
         </Stack>
         <Stack spacing={2}>
@@ -616,10 +521,8 @@ const HomeView = ({
                         label={daysMeta.label}
                         size="small"
                         sx={{
-                          fontWeight: 700,
+                          fontWeight: 500,
                           flexShrink: 0,
-                          color: `${daysMeta.color}.main`,
-                          bgcolor: daysMeta.color,
                         }}
                       />
                     </Stack>
@@ -660,11 +563,9 @@ const HomeView = ({
                         let color = "text.disabled";
                         if (action.status === STATUS.FINISHED) {
                           StatusIcon = CheckCircleIcon;
-                          color = "success.main";
                         }
                         if (action.status === STATUS.PENDING) {
                           StatusIcon = AccessTimeIcon;
-                          color = "warning.main";
                         }
                         return (
                           <Stack
@@ -697,7 +598,7 @@ const HomeView = ({
                       {remainingActions > 0 && (
                         <Typography
                           variant="caption"
-                          color="primary"
+                          color="text.secondary"
                           sx={{ pl: 3.5, fontWeight: 400 }}
                         >
                           + {remainingActions} more items
@@ -791,24 +692,11 @@ const HomeView = ({
   );
 };
 
-const StatItem = ({ label, value, color }) => (
+const StatItem = ({ label, value }) => (
   <Box sx={{ textAlign: "center", flex: 1 }}>
-    <Typography
-      variant="caption"
-      fontWeight="700"
-      color="text.secondary"
-      display="block"
-      pb={0.6}
-      sx={{ textTransform: "uppercase", fontSize: "0.6rem" }}
-    >
+    <Typography variant="h6">{value}</Typography>
+    <Typography variant="body2" color="text.secondary" display="block">
       {label}
-    </Typography>
-    <Typography
-      variant="h6"
-      fontWeight="800"
-      sx={{ color: color, lineHeight: 1 }}
-    >
-      {value}
     </Typography>
   </Box>
 );
@@ -881,17 +769,15 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               size="small"
               sx={{ color: "text.secondary", fontSize: 14 }}
             >
-              {`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`}
+              {`${new Date(plan.startDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${new Date(plan.endDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
             </Typography>
             <Chip
               label={daysMeta.label}
               size="small"
               variant="filled"
               sx={{
-                fontWeight: 700,
+                fontWeight: 500,
                 flexShrink: 0,
-                color: `${daysMeta.color}.main`,
-                bgcolor: daysMeta.color,
               }}
             />
 
@@ -925,32 +811,16 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               spacing={1}
               justifyContent="space-around"
             >
-              <StatItem
-                label="Total"
-                color="text.disabled"
-                value={totalActions}
-              />
-              <StatItem label="Done" value={doneCount} color="text.disabled" />
-              <StatItem
-                label="Active"
-                color="text.disabled"
-                value={pendingCount}
-              />
-              <StatItem
-                label="Canceled"
-                value={canceledCount}
-                color="text.disabled"
-              />
-              <StatItem
-                label="Remaining"
-                value={remainingCount}
-                color="text.disabled"
-              />
+              <StatItem label="Total" value={totalActions} />
+              <StatItem label="Done" value={doneCount} />
+              <StatItem label="Active" value={pendingCount} />
+              <StatItem label="Canceled" value={canceledCount} />
+              <StatItem label="Remaining" value={remainingCount} />
             </Stack>
           </Paper>
         </Box>
 
-        <Box
+        {/* <Box
           sx={{
             display: "flex",
             alignItems: "center",
@@ -958,15 +828,11 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             mb: 2,
           }}
         >
-          <Typography
-            variant="subtitle2"
-            color="text.secondary"
-            sx={{ textTransform: "uppercase", letterSpacing: 1 }}
-          >
-            Execution List
+          <Typography variant="body1" color="text.secondary">
+            Execution list
           </Typography>
 
-          {/* <Chip
+          <Chip
             label={`${plan.actions.length} ${plan.actions.length === 1 ? "Action" : "Actions"}`}
             size="small"
             variant="outlined"
@@ -977,169 +843,173 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               color: "text.secondary",
               border: "1px dashed #cbd5e1",
             }}
-          /> */}
-        </Box>
+          />
+        </Box> */}
 
         <List sx={{ width: "100%", p: 0 }}>
           {plan.actions.map((action, idx) => {
             const isDone = action.status === STATUS.FINISHED;
             return (
-              <ListItem key={idx} disableGutters sx={{ py: 1 }}>
-                <ListItemIcon
-                  sx={{ minWidth: 40 }}
-                  onClick={() => updateStatus(plan.id, idx, action.status)}
-                >
-                  {isDone ? (
-                    <CheckCircleIcon color="success" />
-                  ) : action.status === STATUS.PENDING ? (
-                    <AccessTimeIcon color="warning" />
-                  ) : action.status === STATUS.CANCELED ? (
-                    <BlockIcon sx={{ color: "text.disabled" }} />
-                  ) : (
-                    <CircleIcon color="disabled" />
-                  )}
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Typography
-                      variant="body1"
-                      fontWeight="500"
-                      sx={{
-                        textDecoration:
-                          action.status === STATUS.FINISHED
-                            ? "line-through"
-                            : "none",
-                        color:
-                          action.status === STATUS.FINISHED ||
-                          action.status == STATUS.CANCELED
-                            ? "text.disabled"
-                            : "text.primary",
-                      }}
-                    >
-                      {action.title || action.name}
-                    </Typography>
-                  }
-                  secondary={
-                    <Box component="div" sx={{ mt: 0.5 }}>
-                      {action.description && (
-                        <Typography
-                          variant="caption"
-                          color="textDisabled"
-                          sx={{
-                            fontStyle: "italic",
-                            pl: 1,
-                            borderLeft: "2px solid",
-                            borderColor: "divider",
-                            mt: 0.5,
-                            display: "block",
-                          }}
-                        >
-                          {action.description}
-                        </Typography>
-                      )}
-
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={0.5}
-                        sx={{ mt: 1 }}
+              <>
+                <ListItem key={idx} disableGutters sx={{ py: 1 }}>
+                  <ListItemIcon
+                    sx={{ minWidth: 40 }}
+                    onClick={() => updateStatus(plan.id, idx, action.status)}
+                  >
+                    {isDone ? (
+                      <CheckCircleIcon color="success" />
+                    ) : action.status === STATUS.PENDING ? (
+                      <AccessTimeIcon color="warning" />
+                    ) : action.status === STATUS.CANCELED ? (
+                      <BlockIcon sx={{ color: "text.disabled" }} />
+                    ) : (
+                      <CircleIcon color="disabled" />
+                    )}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Typography
+                        variant="body1"
+                        fontWeight="500"
+                        sx={{
+                          textDecoration:
+                            action.status === STATUS.FINISHED
+                              ? "line-through"
+                              : "none",
+                          color:
+                            action.status === STATUS.FINISHED ||
+                            action.status == STATUS.CANCELED
+                              ? "text.disabled"
+                              : "text.primary",
+                        }}
                       >
-                        <EventIcon sx={{ fontSize: 12, color: "text.disabled"}}/>
-                        <Typography
-                          variant="caption"
-                          fontWeight="500"
-                          color="textDisabled"
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                          }}
-                        >
-                          {action.endDate ? (
-                            `${new Date(action.startDate).toLocaleDateString(
-                              undefined,
-                              {
-                                month: "short",
-                                day: "numeric",
-                              },
-                            )} - ${new Date(action.endDate).toLocaleDateString(
-                              undefined,
-                              {
-                                month: "short",
-                                day: "numeric",
-                              },
-                            )}`
-                          ) : (
-                            <>
-                              {new Date(action.startDate).toLocaleDateString(
-                                undefined,
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )}
-                              {action.startTime && (
-                                <Box
-                                  component="span"
-                                  sx={{
-                                    ml: 0.5,
-                                    color: "disabled",
-                                    fontWeight: 500,
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  {" "}
-                                  {action.endTime ? (
-                                    <>
-                                      <HourglassBottomIcon
-                                        sx={{
-                                          fontSize: 12,
-                                          mx: 0.5,
-                                          color: "text.disabled",
-                                        }}
-                                      />
-                                      {calculateDuration(
-                                        action.startTime,
-                                        action.endTime,
-                                      )}
-                                    </>
-                                  ) : (
-                                    action.startTime
-                                  )}
-                                </Box>
-                              )}
-                            </>
-                          )}
-                        </Typography>
-                      </Stack>
-
-                      {action.status === STATUS.FINISHED &&
-                        action.actualDate && (
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={0.5}
-                            sx={{ mt: 0.5 }}
+                        {action.title || action.name}
+                      </Typography>
+                    }
+                    secondary={
+                      <Box component="div" sx={{ mt: 0.5 }}>
+                        {action.description && (
+                          <Typography
+                            variant="caption"
+                            color="textDisabled"
+                            sx={{
+                              fontStyle: "italic",
+                              pl: 1,
+                              borderLeft: "2px solid",
+                              borderColor: "divider",
+                              mt: 0.5,
+                              display: "block",
+                            }}
                           >
-                            <Typography variant="caption" fontWeight="300">
-                              Completed:{" "}
-                              {new Date(action.actualDate).toLocaleDateString(
+                            {action.description}
+                          </Typography>
+                        )}
+
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={0.5}
+                          sx={{ mt: 1 }}
+                        >
+                          <EventIcon
+                            sx={{ fontSize: 12, color: "text.disabled" }}
+                          />
+                          <Typography
+                            variant="caption"
+                            fontWeight="500"
+                            color="textDisabled"
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            {action.endDate ? (
+                              `${new Date(action.startDate).toLocaleDateString(
                                 undefined,
                                 {
                                   month: "short",
                                   day: "numeric",
                                 },
-                              )}{" "}
-                              • {formatTo12Hour(action.actualTime)}
-                            </Typography>
-                          </Stack>
-                        )}
-                    </Box>
-                  }
-                  secondaryTypographyProps={{ component: "div" }}
-                />
-              </ListItem>
+                              )} - ${new Date(
+                                action.endDate,
+                              ).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                              })}`
+                            ) : (
+                              <>
+                                {new Date(action.startDate).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )}
+                                {action.startTime && (
+                                  <Box
+                                    component="span"
+                                    sx={{
+                                      ml: 0.5,
+                                      color: "disabled",
+                                      fontWeight: 500,
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {" "}
+                                    {action.endTime ? (
+                                      <>
+                                        <HourglassBottomIcon
+                                          sx={{
+                                            fontSize: 12,
+                                            mx: 0.5,
+                                            color: "text.disabled",
+                                          }}
+                                        />
+                                        {calculateDuration(
+                                          action.startTime,
+                                          action.endTime,
+                                        )}
+                                      </>
+                                    ) : (
+                                      action.startTime
+                                    )}
+                                  </Box>
+                                )}
+                              </>
+                            )}
+                          </Typography>
+                        </Stack>
+
+                        {action.status === STATUS.FINISHED &&
+                          action.actualDate && (
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={0.5}
+                              sx={{ mt: 0.5 }}
+                            >
+                              <Typography variant="caption" fontWeight="300">
+                                Completed:{" "}
+                                {new Date(action.actualDate).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )}{" "}
+                                • {formatTo12Hour(action.actualTime)}
+                              </Typography>
+                            </Stack>
+                          )}
+                      </Box>
+                    }
+                    secondaryTypographyProps={{ component: "div" }}
+                  />
+                </ListItem>
+                <Divider variant="middle" component="li" />
+              </>
             );
           })}
         </List>
@@ -1293,6 +1163,11 @@ const FormView = ({
     },
   };
 
+  const getButtonLabel = () => {
+    if (isSaving) return existing ? "Updating..." : "Saving...";
+    return existing ? "Update" : "Save";
+  };
+
   return (
     <Dialog
       fullScreen
@@ -1305,14 +1180,12 @@ const FormView = ({
     >
       <AppBar
         position="sticky"
-        color="default"
+        color="inherit"
         elevation={0}
         sx={{
           top: 0,
           zIndex: 1100,
           bgcolor: "background.paper",
-          borderBottom: 1,
-          borderColor: "divider",
         }}
       >
         <Toolbar>
@@ -1330,9 +1203,18 @@ const FormView = ({
           <Typography sx={{ ml: 2, flex: 1 }} variant="h6">
             {existing ? "Edit Plan" : "New Plan"}
           </Typography>
-          {/* <IconButton color="primary" onClick={handleSave} disabled={isSaving}>
-            <CheckCircleIcon />
-          </IconButton> */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            disabled={isSaving || !isDirty}
+            sx={{
+              borderRadius: 50,
+              px: 3,
+            }}
+          >
+            {getButtonLabel()}
+          </Button>
         </Toolbar>
       </AppBar>
       {isSaving ? (
@@ -1392,10 +1274,8 @@ const FormView = ({
                   InputLabelProps={{ shrink: true }}
                 />
               </Stack>
+
               <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" color="text.secondary">
-                ACTION TASKS
-              </Typography>
               {formData.actions.map((action, idx) => {
                 const scheduleMode =
                   action.startTime || action.endTime ? "time" : "range";
@@ -1418,7 +1298,6 @@ const FormView = ({
                       alignItems="center"
                       sx={{ mb: 2 }}
                     >
-                      <CircleIcon fontSize="small" color="disabled" />
                       <TextField
                         fullWidth
                         variant="standard"
@@ -1427,10 +1306,6 @@ const FormView = ({
                         onChange={(e) =>
                           updateActionField(idx, "title", e.target.value)
                         }
-                        InputProps={{
-                          disableUnderline: false,
-                          sx: { fontWeight: 600 },
-                        }}
                       />
                       <IconButton
                         size="small"
@@ -1473,7 +1348,7 @@ const FormView = ({
                         label={
                           <Typography
                             variant="caption"
-                            sx={{ fontWeight: 700, color: "text.secondary" }}
+                            sx={{ color: "text.secondary" }}
                           >
                             {scheduleMode === "time"
                               ? "Time Slot"
@@ -1484,7 +1359,7 @@ const FormView = ({
                       />
                     </Box>
 
-                    <Stack spacing={2}>
+                    <Stack spacing={3}>
                       <TextField
                         type="date"
                         label="Date"
@@ -1577,7 +1452,6 @@ const FormView = ({
                       >
                         <Typography
                           variant="caption"
-                          fontWeight="bold"
                           sx={{ mb: 2, display: "block" }}
                         >
                           COMPLETION (LOGGED)
@@ -1631,35 +1505,6 @@ const FormView = ({
               </Button>
             </Stack>
           </Container>
-          <Paper
-            elevation={4}
-            sx={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: 2,
-              pb: { xs: "calc(25px + env(safe-area-inset-bottom))", sm: 2 },
-              display: "flex",
-              justifyContent: "center",
-              bgcolor: "background.paper",
-              backgroundImage: "none",
-              borderTop: 1,
-              borderColor: "divider",
-              zIndex: 100,
-            }}
-          >
-            <Button
-              variant="contained"
-              fullWidth
-              size="large"
-              onClick={handleSave}
-              sx={{ maxWidth: 400 }}
-              disabled={isSaving || !isDirty}
-            >
-              {existing ? "Update Plan" : "Save Plan"}
-            </Button>
-          </Paper>
         </>
       )}
 
@@ -1754,7 +1599,7 @@ const ProfileView = ({ user, handleLogout, mode, setMode }) => (
 const HistoryView = ({ user, plans, setView }) => {
   const [historySort, setHistorySort] = useState({
     key: "actualDate",
-    direction: "asc", // Default: Completion Date (ASC)
+    direction: "desc", // Default: Completion Date (ASC)
   });
   const [isSortOpen, setIsSortOpen] = useState(false);
 
@@ -1818,11 +1663,19 @@ const HistoryView = ({ user, plans, setView }) => {
           <Button
             onClick={() => setIsSortOpen(true)}
             size="small"
+            variant="outlined"
             startIcon={<SortIcon />}
-            sx={{ fontWeight: 500, color: "primary.main" }}
+            sx={{
+              fontSize: "0.8125rem",
+            }}
           >
-            {historySortLabels[historySort.key]} (
-            {historySort.direction.toUpperCase()})
+            {(() => {
+              const labels = {
+                actualDate: "Completion Date",
+                actualDays: "Actual Taken",
+              };
+              return `${labels[historySort.key]}`;
+            })()}
           </Button>
         </Stack>
 

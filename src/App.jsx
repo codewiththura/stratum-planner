@@ -46,8 +46,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  BottomNavigation,
-  BottomNavigationAction,
   Dialog,
   Slide,
   CssBaseline,
@@ -66,6 +64,8 @@ import {
   DialogContentText,
   DialogActions,
   Drawer,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 
 // --- Icons ---
@@ -82,7 +82,6 @@ import {
   Person as PersonIcon,
   Close as CloseIcon,
   Assessment as BarChartIcon,
-  Sort as SortIcon,
   Block as BlockIcon,
   Task as TaskIcon,
   AccessTimeFilled as AccessTimeFilledIcon,
@@ -91,8 +90,10 @@ import {
   History as HistoryIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
-  ArrowDropDown as ArrowDropDownIcon,
-  ArrowDropUp as ArrowDropUpIcon,
+  MoreVert as MoreVertIcon,
+  Dehaze as DehazeIcon,
+  ArrowDownward as ArrowDownwardIcon,
+  ArrowUpward as ArrowUpwardIcon,
 } from "@mui/icons-material";
 
 // --- Firebase Config ---
@@ -115,19 +116,32 @@ const getDesignTokens = (mode) => ({
   palette: {
     mode,
     primary: {
-      main: mode === "light" ? "#2563eb" : "#0a57d1",
+      main: mode === "light" ? "#2563eb" : "#4468d7",
       contrastText: "#ffffff",
     },
-    // secondary: {
-    //   main: mode === "light" ? "#64748b" : "#9aa0a6",
-    // },
     background: {
-      default: mode === "light" ? "#f8fafc" : "#1c1c1c",
-      paper: mode === "light" ? "#ffffff" : "#131314",
+      default: mode === "light" ? "#f8fafc" : "#282828",
+      paper: mode === "light" ? "#ffffff" : "#242424",
+    },
+    success: {
+      main: mode === "light" ? "#28be8a" : "#47d5a6", // bg
+      dark: mode === "light" ? "#1b7f5c" : "#22946e", // icon
+    },
+    warning: {
+      main: mode === "light" ? "#dfae44" : "#d7ac61", // bg
+      dark: mode === "light" ? "#b8871f" : "#a87a2a", // icon
+    },
+    error: {
+      main: mode === "light" ? "#d06262" : "#d94a4a", // bg
+      dark: mode === "light" ? "#b13535" : "#9c2121", // icon
+    },
+    info: {
+      main: mode === "light" ? "#347ada" : "#4077d1", // bg
+      dark: mode === "light" ? "#1e56a3" : "#21498a", // icon
     },
     text: {
-      primary: mode === "light" ? "#0f172a" : "#e3e3e3",
-      secondary: mode === "light" ? "#475569" : "#9aa0a6",
+      primary: mode === "light" ? "#000000" : "#ffffff",
+      secondary: mode === "light" ? "#5d5d64" : "#8f9095",
     },
     divider: mode === "light" ? "#e2e8f0" : "#3c4043",
   },
@@ -141,13 +155,11 @@ const getDesignTokens = (mode) => ({
       styleOverrides: {
         root: ({ theme }) => ({
           borderRadius: 14,
-          border: `1px solid ${theme.palette.divider}`,
+          border: `0.8px solid ${theme.palette.divider}`,
+          backgroundColor: theme.palette.background.paper,
           "&:hover": {
-            boxShadow:
-              theme.palette.mode === "light"
-                ? "0 6px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)"
-                : "0 8px 24px rgba(0, 0, 0, 0.5)",
-            backgroundColor: theme.palette.background.paper,
+            backgroundColor:
+              theme.palette.mode === "light" ? "#f7f7f7" : "#2a2a2a",
           },
         }),
       },
@@ -272,9 +284,19 @@ const clampDate = (dateStr, minDate, maxDate) => {
   return dateStr;
 };
 
-const SharedHeader = ({ title, user }) => (
-  <AppBar position="sticky" color="inherit" elevation={0}>
+const SharedHeader = ({ title, user, onMenuClick }) => (
+  <AppBar
+    position="sticky"
+    color="inherit"
+    elevation={0}
+    sx={{
+      zIndex: (theme) => theme.zIndex.drawer + 1,
+    }}
+  >
     <Toolbar sx={{ py: 0.5 }}>
+      <IconButton onClick={onMenuClick} sx={{ mr: 1, color: "text.primary" }}>
+        <DehazeIcon />
+      </IconButton>
       <Box
         sx={{
           width: 40,
@@ -353,7 +375,14 @@ const SortDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { borderTopLeftRadius: 20, borderTopRightRadius: 20, p: 2, pb: 4 },
+        sx: {
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          p: 3,
+          pb: 5,
+          bgcolor: "background.paper",
+          backgroundImage: "none",
+        },
       }}
     >
       <Box sx={{ width: "100%", maxWidth: 500, mx: "auto" }}>
@@ -420,6 +449,7 @@ const HomeView = ({
   setSelectedPlanId,
   sortConfig,
   setSortConfig,
+  onMenuClick,
 }) => {
   const [isSortOpen, setIsSortOpen] = React.useState(false);
 
@@ -430,19 +460,28 @@ const HomeView = ({
         minHeight: "100vh",
       }}
     >
-      <SharedHeader title="Dashboard" user={user} />
-      <Container maxWidth="sm" sx={{ pt: 3 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 3, px: 1 }}
+      <SharedHeader title="Dashboard" user={user} onMenuClick={onMenuClick} />
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            position: "sticky",
+            top: 64,
+            zIndex: 10,
+            bgcolor: "background.default",
+            pt: 3,
+            pb: 2,
+            px: 1,
+            mb: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
           <Typography
             variant="caption"
             sx={{
-              fontWeight: 500,
               color: "text.disabled",
+              fontWeight: 500,
               textTransform: "uppercase",
             }}
           >
@@ -452,23 +491,41 @@ const HomeView = ({
           <Button
             onClick={() => setIsSortOpen(true)}
             size="small"
-            startIcon={<SortIcon />}
+            endIcon={
+              sortConfig.direction == "asc" ? (
+                <ArrowUpwardIcon />
+              ) : (
+                <ArrowDownwardIcon />
+              )
+            }
             variant="outlined"
             sx={{
               fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "text.secondary",
+              borderColor: "divider",
+              px: 2,
+              bgcolor: "background.paper",
+              borderRadius: 2.5,
+              "&:hover": {
+                bgcolor: (theme) =>
+                  theme.palette.mode === "light" ? "#f7f7f7" : "#2a2a2a",
+              },
             }}
           >
             {(() => {
               const labels = {
-                startDate: "Start Date",
-                progress: "Progress",
-                daysLeft: "Urgency",
-                actions: "Tasks",
+                startDate: "Start date",
+                progress: "Progress level",
+                daysLeft: "Days left",
+                actions: "Number of tasks",
               };
-              return `${labels[sortConfig.key]}`;
+              return `Sort by: ${labels[sortConfig.key]}`;
             })()}
           </Button>
-        </Stack>
+        </Box>
+        <Divider sx={{ display: "none" }} />
+
         <Stack spacing={2}>
           {plans.map((plan) => {
             const daysMeta = getDaysLeft(plan.endDate);
@@ -523,6 +580,7 @@ const HomeView = ({
                         sx={{
                           fontWeight: 500,
                           flexShrink: 0,
+                          
                         }}
                       />
                     </Stack>
@@ -543,7 +601,8 @@ const HomeView = ({
                         </Typography>
                         <Typography
                           variant="caption"
-                          fontWeight="bold"
+                          fontWeight="600"
+                          fontSize={14}
                           color="primary"
                         >
                           {Math.round(progress)}%
@@ -552,7 +611,7 @@ const HomeView = ({
                       <LinearProgress
                         variant="determinate"
                         value={progress}
-                        sx={{ height: 6, borderRadius: 3, bgcolor: "#f1f5f9" }}
+                        sx={{ height: 6, borderRadius: 3 }}
                         color={progress === 100 ? "success" : "primary"}
                       />
                     </Box>
@@ -560,12 +619,15 @@ const HomeView = ({
                     <Stack spacing={1} mb={2.5}>
                       {previewActions.map((action, idx) => {
                         let StatusIcon = CircleIcon;
-                        let color = "text.disabled";
+                        let iconColor = "text.disabled";
                         if (action.status === STATUS.FINISHED) {
                           StatusIcon = CheckCircleIcon;
-                        }
-                        if (action.status === STATUS.PENDING) {
+                          iconColor = "success.main";
+                        } else if (action.status === STATUS.PENDING) {
                           StatusIcon = AccessTimeIcon;
+                          iconColor = "warning.main";
+                        } else if (action.status === STATUS.CANCELED) {
+                          StatusIcon = BlockIcon;
                         }
                         return (
                           <Stack
@@ -574,7 +636,12 @@ const HomeView = ({
                             alignItems="center"
                             spacing={1.5}
                           >
-                            <StatusIcon sx={{ fontSize: 16, color: color }} />
+                            <StatusIcon
+                              sx={{
+                                fontSize: 16,
+                                color: iconColor,
+                              }}
+                            />
                             <Typography
                               variant="body2"
                               noWrap
@@ -605,55 +672,6 @@ const HomeView = ({
                         </Typography>
                       )}
                     </Stack>
-
-                    {/* <Divider sx={{ mb: 2 }} />
-
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-evenly"
-                      sx={{ width: "100%", px: 0.5 }}
-                      divider={
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "divider", fontWeight: 300, mx: 0.5 }}
-                        >
-                          |
-                        </Typography>
-                      }
-                    >
-                      <Typography
-                        variant="caption"
-                        fontWeight="700"
-                        color="text.disabled"
-                      >
-                        {doneCount} Completed
-                      </Typography>
-
-                      <Typography
-                        variant="caption"
-                        fontWeight="700"
-                        color="text.disabled"
-                      >
-                        {activeCount} Pending
-                      </Typography>
-
-                      <Typography
-                        variant="caption"
-                        fontWeight="700"
-                        color="text.disabled"
-                      >
-                        {canceledCount} Canceled
-                      </Typography>
-
-                      <Typography
-                        variant="caption"
-                        fontWeight="700"
-                        color="text.disabled"
-                      >
-                        {todoCount} Total
-                      </Typography>
-                    </Stack> */}
                   </CardContent>
                 </CardActionArea>
               </Card>
@@ -663,7 +681,7 @@ const HomeView = ({
       </Container>
       <Fab
         color="primary"
-        sx={{ position: "fixed", bottom: 85, right: 20 }}
+        sx={{ position: "fixed", bottom: 70, right: 40 }}
         onClick={() => {
           setSelectedPlanId(null);
           setView("create");
@@ -676,16 +694,16 @@ const HomeView = ({
         onClose={() => setIsSortOpen(false)}
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
-        title="Sort Plans By"
+        title="Sort plans by"
         options={[
-          { label: "Start Date", key: "startDate", icon: <EventIcon /> },
-          { label: "Progress Level", key: "progress", icon: <BarChartIcon /> },
+          { label: "Start date", key: "startDate", icon: <EventIcon /> },
+          { label: "Progress level", key: "progress", icon: <BarChartIcon /> },
           {
-            label: "Urgency (Days Left)",
+            label: "Urgency (Days left)",
             key: "daysLeft",
             icon: <AccessTimeFilledIcon />,
           },
-          { label: "Number of Tasks", key: "actions", icon: <TaskIcon /> },
+          { label: "Number of tasks", key: "actions", icon: <TaskIcon /> },
         ]}
       />
     </Box>
@@ -702,7 +720,29 @@ const StatItem = ({ label, value }) => (
 );
 
 const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+
   if (!plan) return null;
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    handleMenuClose();
+    setView("edit");
+  };
+
+  const handleDelete = () => {
+    handleMenuClose();
+    onRequestDelete(plan.id);
+  };
+
   const totalActions = plan.actions.length;
   const doneCount = plan.actions.filter(
     (a) => a.status === STATUS.FINISHED,
@@ -743,13 +783,40 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             <ArrowBackIcon />
           </IconButton>
           <Box sx={{ flexGrow: 1 }} />
-          <IconButton onClick={() => setView("edit")}>
-            <EditIcon />
+          <IconButton onClick={handleMenuOpen}>
+            <MoreVertIcon />
           </IconButton>
 
-          <IconButton color="error" onClick={() => onRequestDelete(plan.id)}>
-            <DeleteIcon />
-          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleMenuClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            PaperProps={{
+              sx: { borderRadius: 2, minWidth: 150, mt: 1 },
+            }}
+          >
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Edit Plan</ListItemText>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Delete Plan</ListItemText>
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
@@ -782,12 +849,12 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             />
 
             <Typography
-              variant="caption"
+              variant="h6"
               fontWeight="bold"
               color="primary"
               sx={{ ml: "auto !important" }}
             >
-              {Math.round(progress)}% Complete
+              {Math.round(progress)}%
             </Typography>
           </Stack>
           <LinearProgress
@@ -801,7 +868,6 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               mt: 3,
               p: 1.5,
               borderRadius: 3,
-              bgcolor: "action.hover",
               borderStyle: "dashed",
             }}
           >
@@ -820,32 +886,6 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           </Paper>
         </Box>
 
-        {/* <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 2,
-          }}
-        >
-          <Typography variant="body1" color="text.secondary">
-            Execution list
-          </Typography>
-
-          <Chip
-            label={`${plan.actions.length} ${plan.actions.length === 1 ? "Action" : "Actions"}`}
-            size="small"
-            variant="outlined"
-            sx={{
-              fontWeight: 700,
-              fontSize: "0.65rem",
-              bgcolor: "#f8fafc",
-              color: "text.secondary",
-              border: "1px dashed #cbd5e1",
-            }}
-          />
-        </Box> */}
-
         <List sx={{ width: "100%", p: 0 }}>
           {plan.actions.map((action, idx) => {
             const isDone = action.status === STATUS.FINISHED;
@@ -857,9 +897,9 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                     onClick={() => updateStatus(plan.id, idx, action.status)}
                   >
                     {isDone ? (
-                      <CheckCircleIcon color="success" />
+                      <CheckCircleIcon sx={{ color: "success.dark" }} />
                     ) : action.status === STATUS.PENDING ? (
-                      <AccessTimeIcon color="warning" />
+                      <AccessTimeIcon sx={{ color: "warning.dark" }} />
                     ) : action.status === STATUS.CANCELED ? (
                       <BlockIcon sx={{ color: "text.disabled" }} />
                     ) : (
@@ -1539,74 +1579,322 @@ const FormView = ({
   );
 };
 
-const ProfileView = ({ user, handleLogout, mode, setMode }) => (
-  <Box
-    sx={{
-      p: 4,
-      textAlign: "center",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    }}
-  >
-    <Avatar src={user.photoURL} sx={{ width: 80, height: 80, mb: 2 }} />
-    <Typography variant="h6" color="text.primary">
-      {user.displayName}
-    </Typography>
-    <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-      {user.email}
-    </Typography>
-
-    <Paper
-      variant="outlined"
-      sx={{ width: "100%", maxWidth: 360, borderRadius: 4, overflow: "hidden" }}
+const ProfileView = ({ user, handleLogout, mode, setMode, onMenuClick }) => (
+  <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+    <SharedHeader title="Profile" user={user} onMenuClick={onMenuClick} />
+    <Box
+      sx={{
+        p: 4,
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
     >
-      <List disablePadding>
-        <ListItem sx={{ py: 2 }}>
-          <ListItemIcon>
-            {mode === "dark" ? <DarkModeIcon /> : <LightModeIcon />}
-          </ListItemIcon>
-          <ListItemText
-            primary="Appearance"
-            secondary={mode === "dark" ? "Dark Mode" : "Light Mode"}
-          />
-          <ToggleButtonGroup
-            value={mode}
-            exclusive
-            size="small"
-            onChange={(e, val) => val && setMode(val)}
+      <Avatar src={user.photoURL} sx={{ width: 80, height: 80, mb: 2 }} />
+      <Typography variant="h6" color="text.primary">
+        {user.displayName}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+        {user.email}
+      </Typography>
+
+      <Paper
+        variant="outlined"
+        sx={{
+          width: "100%",
+          maxWidth: 360,
+          borderRadius: 4,
+          overflow: "hidden",
+        }}
+      >
+        <List disablePadding>
+          <ListItem sx={{ py: 2 }}>
+            <ListItemIcon>
+              {mode === "dark" ? <DarkModeIcon /> : <LightModeIcon />}
+            </ListItemIcon>
+            <ListItemText
+              primary="Appearance"
+              secondary={mode === "dark" ? "Dark Mode" : "Light Mode"}
+            />
+            <ToggleButtonGroup
+              value={mode}
+              exclusive
+              size="small"
+              onChange={(e, val) => val && setMode(val)}
+            >
+              <ToggleButton value="light">
+                <LightModeIcon fontSize="small" />
+              </ToggleButton>
+              <ToggleButton value="dark">
+                <DarkModeIcon fontSize="small" />
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </ListItem>
+          <Divider />
+          <ListItemButton
+            onClick={handleLogout}
+            sx={{ color: "error.main", py: 2 }}
           >
-            <ToggleButton value="light">
-              <LightModeIcon fontSize="small" />
-            </ToggleButton>
-            <ToggleButton value="dark">
-              <DarkModeIcon fontSize="small" />
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </ListItem>
-        <Divider />
-        <ListItemButton
-          onClick={handleLogout}
-          sx={{ color: "error.main", py: 2 }}
-        >
-          <ListItemText primary="Sign Out" />
-        </ListItemButton>
-      </List>
-    </Paper>
+            <ListItemText primary="Sign Out" />
+          </ListItemButton>
+        </List>
+      </Paper>
+    </Box>
   </Box>
 );
 
-const HistoryView = ({ user, plans, setView }) => {
+const TaskDetailDialog = ({ open, onClose, task }) => {
+  if (!task) return null;
+
+  const start = new Date(task.startDate);
+  const plannedEnd = task.endDate ? new Date(task.endDate) : start;
+  const actualEnd = new Date(task.actualDate);
+
+  // Calculate Durations
+  const plannedDuration =
+    Math.floor((plannedEnd - start) / (1000 * 60 * 60 * 24)) + 1;
+  const actualDuration =
+    Math.floor((actualEnd - start) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Calculate Deviation
+  const diffTime = plannedEnd.getTime() - actualEnd.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let statusLabel = "On Time";
+  let statusColor = "success";
+  let statusIcon = <CheckCircleIcon fontSize="inherit" />;
+
+  if (diffDays > 0) {
+    statusLabel = `${diffDays} days ahead`;
+    statusColor = "success";
+    statusIcon = <ArrowUpwardIcon sx={{ fontSize: 12 }} />;
+  } else if (diffDays < 0) {
+    statusLabel = `${Math.abs(diffDays)} days behind`;
+    statusColor = "error";
+    statusIcon = <ArrowDownwardIcon sx={{ fontSize: 12 }} />;
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          backgroundImage: "none",
+        },
+      }}
+    >
+      <DialogTitle>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          fontWeight="700"
+          sx={{ letterSpacing: 1, fontSize: "0.65rem" }}
+        >
+          {task.planTitle?.toUpperCase() || "NO PLAN"}
+        </Typography>
+        <Typography
+          variant="h6"
+          fontWeight="bold"
+          sx={{
+            mt: 0.5,
+            lineHeight: 1.2,
+            fontSize: "1.1rem",
+            display: "-webkit-box",
+            overflow: "hidden",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 2,
+          }}
+        >
+          {task.title || task.name}
+        </Typography>
+      </DialogTitle>
+
+      <DialogContent>
+        <Stack spacing={1.5} sx={{ mt: 1 }}>
+          <Divider sx={{ borderStyle: "dashed" }} />
+
+          {/* Grid for Details (2 Columns) */}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {/* Left Col: Dates */}
+            <Box sx={{ flex: 1 }}>
+              <Stack spacing={1}>
+                <Box>
+                  <Typography variant="caption" color="text.disabled">
+                    Planned Date
+                  </Typography>
+                  <Typography variant="body2" fontWeight="500">
+                    {task.endDate
+                      ? `${new Date(task.startDate).toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric" },
+                        )} - ${new Date(task.endDate).toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric" },
+                        )}`
+                      : `${new Date(task.startDate).toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric" },
+                        )}`}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.disabled">
+                    Actual End
+                  </Typography>
+                  <Stack
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 1.5,
+                      "@media (max-width: 400px)": {
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        gap: 1,
+                      },
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight="500">
+                      {actualEnd.toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </Typography>
+                    <Chip
+                      icon={statusIcon}
+                      label={statusLabel}
+                      size="small"
+                      color={statusColor}
+                      variant="soft"
+                      sx={{
+                        bgcolor: `${statusColor}.light`,
+                        color: `${statusColor}.contrastText`,
+                        fontSize: 10,
+                        height: 20,
+                        "& .MuiChip-icon": {
+                          fontSize: 12,
+                          marginLeft: "4px",
+                        },
+                      }}
+                    />
+                  </Stack>
+                </Box>
+              </Stack>
+            </Box>
+
+            {/* Right Col: Duration */}
+            <Box sx={{ flex: 1 }}>
+              <Stack direction="row" spacing={1}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: 1,
+                    p: 0.5,
+                    textAlign: "center",
+                    bgcolor: "transparent",
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="bold" fontSize="1rem">
+                    {`${plannedDuration}d`}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontSize="0.65rem"
+                  >
+                    Planned
+                  </Typography>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: 1,
+                    p: 0.5,
+                    textAlign: "center",
+                    bgcolor: "transparent",
+                    borderColor:
+                      plannedDuration !== actualDuration
+                        ? "warning.main"
+                        : "divider",
+                    color:
+                      plannedDuration !== actualDuration
+                        ? "warning.main"
+                        : "inherit",
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="bold" fontSize="1rem">
+                    {`${actualDuration}d`}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color={
+                      plannedDuration !== actualDuration
+                        ? "warning.main"
+                        : "text.disabled"
+                    }
+                    fontSize="0.65rem"
+                  >
+                    Taken
+                  </Typography>
+                </Paper>
+              </Stack>
+              {/* Timestamp Footer */}
+              <Box
+                sx={{
+                  mt: 1.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  color: "text.secondary",
+                  flexWrap: "wrap",
+                  gap: 0.5,
+                  "@media (max-width: 400px)": {
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: 0,
+                  },
+                }}
+              >
+                <Typography variant="caption" component="span">
+                  Completed at
+                </Typography>
+                <Typography variant="caption" component="span">
+                  {formatTo12Hour(task.actualTime)}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Stack>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, mt: 1 }}>
+        <Button
+          onClick={onClose}
+          fullWidth
+          variant="contained"
+          color="primary"
+          size="small"
+          sx={{ borderRadius: 2 }}
+        >
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const HistoryView = ({ user, plans, setView, onMenuClick }) => {
   const [historySort, setHistorySort] = useState({
     key: "actualDate",
-    direction: "desc", // Default: Completion Date (ASC)
+    direction: "desc",
   });
   const [isSortOpen, setIsSortOpen] = useState(false);
-
-  const historySortLabels = {
-    actualDate: "Completion Date",
-    actualDays: "Actual Taken",
-  };
+  const [selectedTask, setSelectedTask] = useState(null); // Track selected task for modal
 
   const completedTasks = React.useMemo(() => {
     let tasks = [];
@@ -1646,13 +1934,26 @@ const HistoryView = ({ user, plans, setView }) => {
         minHeight: "100vh",
       }}
     >
-      <SharedHeader title="Completed Actions" user={user} />
-      <Container maxWidth="sm" sx={{ pt: 3 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 3, px: 1 }}
+      <SharedHeader
+        title="Completed Actions"
+        user={user}
+        onMenuClick={onMenuClick}
+      />
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            position: "sticky",
+            top: 64,
+            zIndex: 10,
+            bgcolor: "background.default",
+            pt: 3,
+            pb: 2,
+            px: 1,
+            mb: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
           <Typography
             variant="caption"
@@ -1663,21 +1964,38 @@ const HistoryView = ({ user, plans, setView }) => {
           <Button
             onClick={() => setIsSortOpen(true)}
             size="small"
+            endIcon={
+              historySort.direction == "asc" ? (
+                <ArrowUpwardIcon />
+              ) : (
+                <ArrowDownwardIcon />
+              )
+            }
             variant="outlined"
-            startIcon={<SortIcon />}
             sx={{
               fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "text.secondary",
+              borderColor: "divider",
+              px: 2,
+              bgcolor: "background.paper",
+              "&:hover": {
+                bgcolor: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "#f7f7f7"
+                    : "rgba(10, 87, 209, 0.08)",
+              },
             }}
           >
             {(() => {
               const labels = {
-                actualDate: "Completion Date",
-                actualDays: "Actual Taken",
+                actualDate: "Completed date",
+                actualDays: "Actual days",
               };
-              return `${labels[historySort.key]}`;
+              return `Sort by: ${labels[historySort.key]}`;
             })()}
           </Button>
-        </Stack>
+        </Box>
 
         {completedTasks.length === 0 ? (
           <Box sx={{ textAlign: "center", mt: 10, px: 4 }}>
@@ -1689,233 +2007,110 @@ const HistoryView = ({ user, plans, setView }) => {
         ) : (
           <List sx={{ p: 0 }}>
             {completedTasks.map((task, index) => {
-              const start = new Date(task.startDate || new Date());
-              const plannedEnd = task.endDate ? new Date(task.endDate) : start;
-              const actualEnd = new Date(task.actualDate || new Date());
-
-              const plannedDays = Math.max(
-                1,
-                Math.ceil((plannedEnd - start) / (1000 * 60 * 60 * 24)) + 1,
-              );
-
-              const actualDays = Math.max(
-                1,
-                Math.ceil((actualEnd - start) / (1000 * 60 * 60 * 24)) + 1,
-              );
-
-              const diffInMs = plannedEnd.getTime() - actualEnd.getTime();
-              const daysDiff = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-              let status = "on-time";
-              if (daysDiff > 0) status = "ahead";
-              else if (daysDiff < 0) status = "behind";
-
-              const absDiff = Math.abs(daysDiff);
-
               return (
-                <Paper
-                  variant="outlined"
-                  key={index}
-                  sx={{ mb: 2, borderRadius: 3, p: 2 }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    fontWeight="700"
-                    display="block"
-                    mb={0.5}
-                    sx={{ ml: 0.1 }}
-                  >
-                    {task.planTitle}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    fontWeight="800"
-                    gutterBottom
-                    sx={{ ml: 0.1 }}
-                  >
-                    {task.title}
-                  </Typography>
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <EventIcon
-                        sx={{ fontSize: 12, color: "text.disabled" }}
-                      />
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                        sx={{ display: "flex", alignItems: "center" }}
-                      >
-                        {task.endDate
-                          ? `${new Date(task.startDate).toLocaleDateString(
-                              undefined,
-                              { month: "short", day: "numeric" },
-                            )} - ${new Date(task.endDate).toLocaleDateString(
-                              undefined,
-                              { month: "short", day: "numeric" },
-                            )}`
-                          : `${new Date(task.startDate).toLocaleDateString(
-                              undefined,
-                              { month: "short", day: "numeric" },
-                            )}`}
-                        {task.startTime && (
-                          <Box
-                            component="span"
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              ml: 0.5,
-                            }}
-                          >
-                            <HourglassBottomIcon
-                              sx={{
-                                fontSize: 12,
-                                mx: 0.5,
-                                color: "text.disabled",
-                              }}
-                            />
-                            {task.endTime
-                              ? calculateDuration(task.startTime, task.endTime)
-                              : formatTo12Hour(task.startTime)}
-                          </Box>
-                        )}
-                      </Typography>
-                    </Stack>
-                    <Box>
-                      <Chip
-                        size="small"
-                        label={`Completed: ${new Date(
-                          task.actualDate,
-                        ).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })} • ${formatTo12Hour(task.actualTime)}`}
-                        sx={{
-                          bgcolor: "#edf7ed",
-                          color: "#1e4620",
-                          fontWeight: 700,
-                          fontSize: "0.65rem",
-                        }}
-                      />
-                    </Box>
-                    <Box
+                <React.Fragment key={index}>
+                  <ListItem disablePadding>
+                    <ListItemButton
+                      onClick={() => setSelectedTask(task)}
                       sx={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 1.5,
-                        bgcolor: "action.hover",
-                        p: 1.5,
+                        py: 1.5,
+                        px: 2,
+                        mx: 1,
                         borderRadius: 2,
+                        transition: "background-color 0.2s",
+                        "&:hover": {
+                          bgcolor: (theme) =>
+                            theme.palette.mode === "light"
+                              ? "rgba(0, 0, 0, 0.04)"
+                              : "rgba(255, 255, 255, 0.05)",
+                        },
                       }}
                     >
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          fontWeight="500"
-                        >
-                          PLANNED
-                        </Typography>
-                        <Typography variant="body2" fontWeight="700">
-                          {plannedDays} Days
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          borderLeft: "1px solid",
-                          borderColor: "divider",
-                          pl: 1.5,
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          fontWeight="500"
-                        >
-                          ACTUAL TAKEN
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          fontWeight="700"
-                          color={
-                            status === "ahead"
-                              ? "success.main"
-                              : status === "behind"
-                                ? "error.main"
-                                : "text.primary"
-                          }
-                        >
-                          {actualDays} {actualDays === 1 ? "Day" : "Days"}{" "}
-                          {status === "ahead" && (
-                            <Box
-                              component="span"
-                              sx={{
-                                fontSize: "0.7rem",
-                                opacity: 0.5,
-                                color: "text.primary",
-                                fontWeight: 500,
-                                ml: 0.5,
-                              }}
-                            >
-                              ({absDiff}d ahead of plan)
-                            </Box>
-                          )}
-                          {status === "behind" && (
-                            <Box
-                              component="span"
-                              sx={{
-                                fontSize: "0.7rem",
-                                opacity: 0.5,
-                                color: "text.primary",
-                                fontWeight: 500,
-                                ml: 0.5,
-                              }}
-                            >
-                              ({absDiff}d behind schedule)
-                            </Box>
-                          )}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {task.description && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontStyle: "italic",
-                          color: "text.secondary",
-                          pl: 1,
-                          borderLeft: "2px solid #eee",
-                        }}
-                      >
-                        {task.description}
-                      </Typography>
-                    )}
-                  </Stack>
-                </Paper>
+                      <ListItemIcon sx={{ minWidth: 40 }}>
+                        <CheckCircleIcon sx={{ color: "success.main" }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body1" fontWeight="500">
+                            {task.title || task.name}
+                          </Typography>
+                        }
+                        secondary={
+                          <Box component="div" sx={{ mt: 0.5 }}>
+                            {task.planTitle && (
+                              <Typography
+                                variant="caption"
+                                color="textDisabled"
+                                sx={{
+                                  fontStyle: "italic",
+                                  pl: 1,
+                                  borderLeft: "2px solid",
+                                  borderColor: "divider",
+                                  mt: 0.8,
+                                  display: "block",
+                                }}
+                              >
+                                {task.planTitle}
+                              </Typography>
+                            )}
+                            {task.status === STATUS.FINISHED &&
+                              task.actualDate && (
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  spacing={0.5}
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight="300"
+                                  >
+                                    Completed:{" "}
+                                    {new Date(
+                                      task.actualDate,
+                                    ).toLocaleDateString(undefined, {
+                                      month: "short",
+                                      day: "numeric",
+                                    })}{" "}
+                                    • {formatTo12Hour(task.actualTime)}
+                                  </Typography>
+                                </Stack>
+                              )}
+                          </Box>
+                        }
+                        secondaryTypographyProps={{ component: "div" }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                  <Divider variant="middle" component="li" />
+                </React.Fragment>
               );
             })}
           </List>
         )}
       </Container>
 
+      {/* Include the new Modal */}
+      <TaskDetailDialog
+        open={Boolean(selectedTask)}
+        task={selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
+
       <SortDrawer
         open={isSortOpen}
         onClose={() => setIsSortOpen(false)}
         sortConfig={historySort}
         setSortConfig={setHistorySort}
-        title="Sort Records By"
+        title="Sort records by"
         options={[
           {
-            label: "Completion Date",
+            label: "Completion date",
             key: "actualDate",
             icon: <HistoryIcon />,
           },
           {
-            label: "Actual Taken (Days)",
+            label: "Actual taken (days)",
             key: "actualDays",
             icon: <AccessTimeIcon />,
           },
@@ -1939,6 +2134,7 @@ const App = () => {
   const [view, setView] = useState("home");
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [plans, setPlans] = useState([]);
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -1951,11 +2147,6 @@ const App = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: "startDate",
-    direction: "asc",
-  });
-
-  const [historySort, setHistorySort] = useState({
-    key: "actualDate",
     direction: "asc",
   });
 
@@ -2009,10 +2200,20 @@ const App = () => {
     localStorage.getItem("themeMode") || "light",
   );
 
+  const toggleDrawer = (open) => (event) => {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
+      return;
+    }
+    setIsNavOpen(open);
+  };
+
   useEffect(() => {
     localStorage.setItem("themeMode", mode);
 
-    const themeColor = mode === "dark" ? "#0f172a" : "#f8fafc";
+    const themeColor = mode === "dark" ? "#282828" : "#f8fafc";
     const barStyle = mode === "dark" ? "black-translucent" : "default";
 
     let metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -2185,7 +2386,7 @@ const App = () => {
     <>
       {showInstallButton && (
         <Paper
-          elevation={6}
+          elevation={4}
           sx={{
             position: "fixed",
             width: { sm: 400 },
@@ -2198,21 +2399,30 @@ const App = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            bgcolor: "primary.main",
-            color: "white",
+            bgcolor: "background.paper",
+            color: "text.primary",
+            border: "1px solid",
+            borderColor: "divider",
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
             <Box
-              sx={{ bgcolor: "rgba(255,255,255,0.2)", p: 1, borderRadius: 2 }}
+              sx={{
+                bgcolor: "primary.main",
+                p: 1,
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <BarChartIcon sx={{ color: "white" }} />
+              <BarChartIcon sx={{ color: "primary.contrastText" }} />
             </Box>
             <Box>
               <Typography variant="subtitle2" fontWeight="700">
                 Install Stratum
               </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.9 }}>
+              <Typography variant="caption" color="text.secondary">
                 Access your plans directly from your home screen.
               </Typography>
             </Box>
@@ -2221,7 +2431,7 @@ const App = () => {
             <Button
               size="small"
               onClick={() => setShowInstallButton(false)}
-              sx={{ color: "white", minWidth: "auto" }}
+              sx={{ color: "text.secondary", minWidth: "auto" }}
             >
               Later
             </Button>
@@ -2229,11 +2439,7 @@ const App = () => {
               variant="contained"
               size="small"
               onClick={handleInstallClick}
-              sx={{
-                bgcolor: "white",
-                color: "primary.main",
-                "&:hover": { bgcolor: "#f1f5f9" },
-              }}
+              sx={{ boxShadow: 0 }}
             >
               Install
             </Button>
@@ -2266,6 +2472,55 @@ const App = () => {
           </Box>
         )}
 
+        <Drawer
+          anchor="left"
+          open={isNavOpen}
+          onClose={toggleDrawer(false)}
+          PaperProps={{
+            sx: {
+              width: 280,
+              backgroundImage: "none",
+              border: "none",
+            },
+          }}
+        >
+          <Toolbar />
+
+          <List sx={{ px: 2, mt: 2 }}>
+            {[
+              { label: "Dashboard", value: "home", icon: <HomeIcon /> },
+              { label: "Completed", value: "history", icon: <HistoryIcon /> },
+              { label: "Profile", value: "profile", icon: <PersonIcon /> },
+            ].map((item) => (
+              <ListItem key={item.value} disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  selected={view === item.value}
+                  onClick={() => {
+                    setView(item.value);
+                    setIsNavOpen(false);
+                  }}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: view === item.value ? "primary.main" : "inherit",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    primaryTypographyProps={{
+                      color:
+                        view === item.value ? "primary.main" : "textPrimary",
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+
         {view === "home" && (
           <HomeView
             user={user}
@@ -2274,6 +2529,7 @@ const App = () => {
             setSelectedPlanId={setSelectedPlanId}
             sortConfig={sortConfig}
             setSortConfig={setSortConfig}
+            onMenuClick={toggleDrawer(true)}
           />
         )}
         {view === "detail" && (
@@ -2302,54 +2558,22 @@ const App = () => {
             handleLogout={handleLogout}
             mode={mode}
             setMode={setMode}
+            onMenuClick={toggleDrawer(true)}
           />
         )}
         {view === "history" && (
-          <HistoryView plans={plans} setView={setView} user={user} />
+          <HistoryView
+            plans={plans}
+            setView={setView}
+            user={user}
+            onMenuClick={() => setIsNavOpen(true)}
+          />
         )}
         <DeleteConfirmDialog
           open={deleteConfirmation.open}
           onClose={() => setDeleteConfirmation({ open: false, planId: null })}
           onConfirm={handleConfirmDelete}
         />
-        <Paper
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            pb: { xs: "calc(14px + env(safe-area-inset-bottom))", sm: 0 },
-            bgcolor: "background.paper",
-            backgroundImage: "none",
-            borderTop: 1,
-            borderColor: "divider",
-            zIndex: 1000,
-          }}
-          elevation={3}
-        >
-          <BottomNavigation
-            value={view}
-            onChange={(event, newValue) => setView(newValue)}
-            showLabels
-            sx={{ bgcolor: "transparent" }}
-          >
-            <BottomNavigationAction
-              label="Home"
-              value="home"
-              icon={<HomeIcon />}
-            />
-            <BottomNavigationAction
-              label="Completed"
-              value="history"
-              icon={<HistoryIcon />}
-            />
-            <BottomNavigationAction
-              label="Profile"
-              value="profile"
-              icon={<PersonIcon />}
-            />
-          </BottomNavigation>
-        </Paper>
         <Snackbar
           open={notification.open}
           autoHideDuration={4000}

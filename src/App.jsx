@@ -255,26 +255,45 @@ const calculateDuration = (start, end) => {
   return result.trim() || "0 min";
 };
 
-const DeleteConfirmDialog = ({ open, onClose, onConfirm }) => (
+const DeleteConfirmDialog = ({
+  title,
+  description,
+  open,
+  onClose,
+  onConfirm,
+  confirmLabel,
+}) => (
   <Dialog
     open={open}
     onClose={onClose}
     aria-labelledby="alert-dialog-title"
     aria-describedby="alert-dialog-description"
+    PaperProps={{
+      sx: {
+        bgcolor: "background.paper",
+        backgroundImage: "none",
+        borderRadius: 3,
+      },
+    }}
   >
-    <DialogTitle id="alert-dialog-title">{"Delete this plan?"}</DialogTitle>
+    <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
     <DialogContent>
       <DialogContentText id="alert-dialog-description">
-        This action cannot be undone. The plan and all its tasks will be
-        permanently removed.
+        {description}
       </DialogContentText>
     </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose} color="inherit">
+    <DialogActions sx={{ px: 3, pb: 2 }}>
+      <Button onClick={onClose} color="inherit" sx={{ borderRadius: 3 }}>
         Cancel
       </Button>
-      <Button onClick={onConfirm} color="error" variant="contained" autoFocus>
-        Delete
+      <Button
+        onClick={onConfirm}
+        color="error"
+        variant="contained"
+        autoFocus
+        sx={{ borderRadius: 3 }}
+      >
+        {confirmLabel}
       </Button>
     </DialogActions>
   </Dialog>
@@ -1118,6 +1137,7 @@ const FormView = ({
   const existing = plans.find((p) => p.id === selectedPlanId);
 
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState(() => {
     if (existing) return existing;
@@ -1203,12 +1223,24 @@ const FormView = ({
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.endDate) {
-      showMessage("Please provide a Title and Deadline.", "warning");
-      return;
+    const newErrors = {};
+    let isValid = true;
+    if (!formData.title || !formData.title.trim()) {
+      newErrors.title = "Please enter a goal title";
+      isValid = false;
     }
 
+    if (!formData.endDate) {
+      newErrors.endDate = "Please select a deadline";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!isValid) return;
+
     setIsSaving(true);
+
     try {
       const cleanActions = formData.actions
         .filter((a) => a.title.trim())
@@ -1266,7 +1298,8 @@ const FormView = ({
       TransitionComponent={Slide}
       TransitionProps={{ direction: "up" }}
       PaperProps={{
-        ...handlers, sx: { bgcolor: "background.default", backgroundImage: "none" },
+        ...handlers,
+        sx: { bgcolor: "background.default", backgroundImage: "none" },
       }}
     >
       <AppBar
@@ -1316,6 +1349,7 @@ const FormView = ({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
+            bgcolor: "background",
             pb: 10,
           }}
         >
@@ -1334,12 +1368,15 @@ const FormView = ({
               <TextField
                 label="Goal / Title"
                 fullWidth
+                required
                 variant="standard"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                InputProps={{ style: { fontSize: "1.25rem", fontWeight: 600 } }}
+                error={!!errors.title}
+                helperText={errors.title}
+                onChange={(e) => {
+                  setFormData({ ...formData, title: e.target.value });
+                  if (errors.title) setErrors({ ...errors, title: null });
+                }}
               />
               <Stack direction="row" spacing={2}>
                 <DatePicker
@@ -1356,13 +1393,21 @@ const FormView = ({
                 <DatePicker
                   label="Deadline"
                   value={formData.endDate ? dayjs(formData.endDate) : null}
-                  onChange={(newValue) =>
+                  onChange={(newValue) => {
                     setFormData({
                       ...formData,
                       endDate: newValue ? newValue.format("YYYY-MM-DD") : "",
-                    })
-                  }
-                  slotProps={{ textField: { fullWidth: true } }}
+                    });
+                    if (errors.endDate) setErrors({ ...errors, endDate: null });
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      error: !!errors.endDate,
+                      helperText: errors.endDate,
+                    },
+                  }}
                 />
               </Stack>
 
@@ -1394,9 +1439,9 @@ const FormView = ({
                         variant="standard"
                         placeholder="Task name..."
                         value={action.title}
-                        onChange={(e) =>
-                          updateActionField(idx, "title", e.target.value)
-                        }
+                        onChange={(e) => {
+                          updateActionField(idx, "title", e.target.value);
+                        }}
                       />
                       <IconButton
                         size="small"
@@ -1625,32 +1670,14 @@ const FormView = ({
         </>
       )}
 
-      {/* Task Deletion Confirmation */}
-      <Dialog
+      <DeleteConfirmDialog
+        title="Remove this task?"
+        description="Are you sure you want to remove this task? This action cannot be undone."
+        confirmLabel="Remove"
         open={taskToDelete !== null}
         onClose={() => setTaskToDelete(null)}
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Remove Task?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to remove this task? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setTaskToDelete(null)} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDeleteTask}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Remove
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDeleteTask}
+      />
     </Dialog>
   );
 };
@@ -2172,7 +2199,7 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
             icon: <HistoryIcon />,
           },
           {
-            label: "Time Taken",
+            label: "Time taken",
             key: "actualDays",
             icon: <AccessTimeIcon />,
           },
@@ -2648,6 +2675,9 @@ const App = () => {
             />
           )}
           <DeleteConfirmDialog
+            title="Delete this plan?"
+            description="This action cannot be undone. The plan and all its tasks will be permanently removed."
+            confirmLabel="Delete"
             open={deleteConfirmation.open}
             onClose={() => setDeleteConfirmation({ open: false, planId: null })}
             onConfirm={handleConfirmDelete}
@@ -2656,14 +2686,14 @@ const App = () => {
             open={notification.open}
             autoHideDuration={4000}
             onClose={handleCloseNotification}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            sx={{ bottom: { xs: 90, sm: 24 } }}
+            // anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            // sx={{ bottom: { xs: 90, sm: 24 } }}
           >
             <Alert
               onClose={handleCloseNotification}
               severity={notification.severity}
-              variant="filled"
-              sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+              // variant="filled"
+              // sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
             >
               {notification.message}
             </Alert>

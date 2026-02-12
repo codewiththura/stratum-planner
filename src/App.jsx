@@ -103,6 +103,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
 
+import { useSwipeable } from "react-swipeable";
+
 // --- Firebase Config ---
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -748,6 +750,13 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
+  const handlers = useSwipeable({
+    onSwipedRight: () => setView("home"),
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+    delta: 50,
+  });
+
   if (!plan) return null;
 
   const handleMenuOpen = (event) => {
@@ -792,9 +801,11 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
 
   return (
     <Box
+      {...handlers}
       sx={{
         pb: "calc(80px + env(safe-area-inset-bottom))",
         minHeight: "100vh",
+        transition: "transform 0.2s ease-out",
       }}
     >
       <AppBar
@@ -1130,6 +1141,18 @@ const FormView = ({
     };
   });
 
+  const handlers = useSwipeable({
+    onSwipedRight: () => {
+      if (!isSaving) {
+        setIsSaving(false);
+        setView(existing ? "detail" : "home");
+      }
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: false,
+    delta: 50,
+  });
+
   const isDirty = React.useMemo(() => {
     if (existing) {
       return JSON.stringify(formData) !== JSON.stringify(existing);
@@ -1231,14 +1254,6 @@ const FormView = ({
     setTaskToDelete(null);
   };
 
-  const inputIconStyles = {
-    "& .MuiInputBase-input::-webkit-calendar-picker-indicator": {
-      filter: (theme) =>
-        theme.palette.mode === "dark" ? "invert(1) brightness(100%)" : "none",
-      cursor: "pointer",
-    },
-  };
-
   const getButtonLabel = () => {
     if (isSaving) return existing ? "Updating..." : "Saving...";
     return existing ? "Update" : "Save";
@@ -1251,7 +1266,7 @@ const FormView = ({
       TransitionComponent={Slide}
       TransitionProps={{ direction: "up" }}
       PaperProps={{
-        sx: { bgcolor: "background.default", backgroundImage: "none" },
+        ...handlers, sx: { bgcolor: "background.default", backgroundImage: "none" },
       }}
     >
       <AppBar

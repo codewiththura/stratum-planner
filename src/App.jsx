@@ -2063,6 +2063,7 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
               color: "text.secondary",
               borderColor: "divider",
               px: 2,
+              borderRadius: 2.5,
               bgcolor: "background.paper",
               "&:hover": {
                 bgcolor: (theme) =>
@@ -2460,6 +2461,7 @@ const App = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          bgcolor: "background",
         }}
       >
         <CircularProgress />

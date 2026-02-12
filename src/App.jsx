@@ -66,6 +66,7 @@ import {
   Drawer,
   Menu,
   MenuItem,
+  GlobalStyles,
 } from "@mui/material";
 
 // --- Icons ---
@@ -77,7 +78,7 @@ import {
   Google as GoogleIcon,
   Event as EventIcon,
   AccessTime as AccessTimeIcon,
-  CheckCircle as CheckCircleIcon,
+  RadioButtonCheckedOutlined as RadioButtonCheckedOutlinedIcon,
   RadioButtonUnchecked as CircleIcon,
   Person as PersonIcon,
   Close as CloseIcon,
@@ -86,7 +87,7 @@ import {
   Task as TaskIcon,
   AccessTimeFilled as AccessTimeFilledIcon,
   Home as HomeIcon,
-  HourglassBottom as HourglassBottomIcon,
+  ScheduleOutlined as ScheduleOutlinedIcon,
   History as HistoryIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
@@ -95,6 +96,7 @@ import {
   ArrowDownward as ArrowDownwardIcon,
   ArrowUpward as ArrowUpwardIcon,
 } from "@mui/icons-material";
+import { CheckIcon } from "lucide-react";
 
 // --- Firebase Config ---
 const firebaseConfig = {
@@ -303,7 +305,7 @@ const SharedHeader = ({ title, user, onMenuClick }) => (
           height: 40,
           bgcolor: "primary.main",
           borderRadius: 3,
-          display: "flex",
+          display: { xs: "none", sm: "flex" },
           alignItems: "center",
           justifyContent: "center",
           mr: 2,
@@ -315,7 +317,12 @@ const SharedHeader = ({ title, user, onMenuClick }) => (
       <Typography
         variant="h6"
         fontWeight="500"
-        sx={{ flexGrow: 1, color: "text.primary", letterSpacing: -0.5 }}
+        sx={{
+          flexGrow: 1,
+          color: "text.primary",
+          letterSpacing: -0.5,
+          fontSize: { xs: "1.1rem", sm: "1.25rem" },
+        }}
       >
         {title}
       </Typography>
@@ -433,7 +440,7 @@ const SortDrawer = ({
           fullWidth
           variant="contained"
           onClick={onClose}
-          sx={{ mt: 3, py: 1.5 }}
+          sx={{ mt: 3, py: 1.5, borderRadius: 3 }}
         >
           Done
         </Button>
@@ -465,10 +472,10 @@ const HomeView = ({
         <Box
           sx={{
             position: "sticky",
-            top: 64,
+            top: { xs: 56, sm: 64 },
             zIndex: 10,
             bgcolor: "background.default",
-            pt: 3,
+            pt: 1,
             pb: 2,
             px: 1,
             mb: 2,
@@ -580,7 +587,6 @@ const HomeView = ({
                         sx={{
                           fontWeight: 500,
                           flexShrink: 0,
-                          
                         }}
                       />
                     </Stack>
@@ -621,11 +627,10 @@ const HomeView = ({
                         let StatusIcon = CircleIcon;
                         let iconColor = "text.disabled";
                         if (action.status === STATUS.FINISHED) {
-                          StatusIcon = CheckCircleIcon;
-                          iconColor = "success.main";
+                          StatusIcon = RadioButtonCheckedOutlinedIcon;
+                          iconColor = "text.secondary";
                         } else if (action.status === STATUS.PENDING) {
                           StatusIcon = AccessTimeIcon;
-                          iconColor = "warning.main";
                         } else if (action.status === STATUS.CANCELED) {
                           StatusIcon = BlockIcon;
                         }
@@ -711,9 +716,28 @@ const HomeView = ({
 };
 
 const StatItem = ({ label, value }) => (
-  <Box sx={{ textAlign: "center", flex: 1 }}>
-    <Typography variant="h6">{value}</Typography>
-    <Typography variant="body2" color="text.secondary" display="block">
+  <Box
+    sx={{
+      textAlign: "center",
+      flex: 1,
+      minWidth: 0,
+      px: 0.25,
+    }}
+  >
+    <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+      {value}
+    </Typography>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      display="block"
+      noWrap
+      sx={{
+        fontWeight: 500,
+        fontSize: { xs: "0.65rem", sm: "0.75rem" },
+        mt: 0.5,
+      }}
+    >
       {label}
     </Typography>
   </Box>
@@ -874,14 +898,15 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             <Stack
               direction="row"
               divider={<Divider orientation="vertical" flexItem />}
-              spacing={1}
-              justifyContent="space-around"
+              spacing={{ xs: 0, sm: 1 }}
+              justifyContent="space-between"
+              alignItems="center"
             >
               <StatItem label="Total" value={totalActions} />
               <StatItem label="Done" value={doneCount} />
               <StatItem label="Active" value={pendingCount} />
-              <StatItem label="Canceled" value={canceledCount} />
-              <StatItem label="Remaining" value={remainingCount} />
+              <StatItem label="Cancelled" value={canceledCount} />
+              <StatItem label="To Do" value={remainingCount} />
             </Stack>
           </Paper>
         </Box>
@@ -897,11 +922,11 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                     onClick={() => updateStatus(plan.id, idx, action.status)}
                   >
                     {isDone ? (
-                      <CheckCircleIcon sx={{ color: "success.dark" }} />
+                      <RadioButtonCheckedOutlinedIcon color="disabled" />
                     ) : action.status === STATUS.PENDING ? (
-                      <AccessTimeIcon sx={{ color: "warning.dark" }} />
+                      <AccessTimeIcon />
                     ) : action.status === STATUS.CANCELED ? (
-                      <BlockIcon sx={{ color: "text.disabled" }} />
+                      <BlockIcon color="disabled" />
                     ) : (
                       <CircleIcon color="disabled" />
                     )}
@@ -1000,7 +1025,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                                     {" "}
                                     {action.endTime ? (
                                       <>
-                                        <HourglassBottomIcon
+                                        <ScheduleOutlinedIcon
                                           sx={{
                                             fontSize: 12,
                                             mx: 0.5,
@@ -1663,7 +1688,7 @@ const TaskDetailDialog = ({ open, onClose, task }) => {
 
   let statusLabel = "On Time";
   let statusColor = "success";
-  let statusIcon = <CheckCircleIcon fontSize="inherit" />;
+  let statusIcon = <RadioButtonCheckedOutlinedIcon fontSize="inherit" />;
 
   if (diffDays > 0) {
     statusLabel = `${diffDays} days ahead`;
@@ -1817,14 +1842,6 @@ const TaskDetailDialog = ({ open, onClose, task }) => {
                     p: 0.5,
                     textAlign: "center",
                     bgcolor: "transparent",
-                    borderColor:
-                      plannedDuration !== actualDuration
-                        ? "warning.main"
-                        : "divider",
-                    color:
-                      plannedDuration !== actualDuration
-                        ? "warning.main"
-                        : "inherit",
                   }}
                 >
                   <Typography variant="h6" fontWeight="bold" fontSize="1rem">
@@ -1832,12 +1849,8 @@ const TaskDetailDialog = ({ open, onClose, task }) => {
                   </Typography>
                   <Typography
                     variant="caption"
-                    color={
-                      plannedDuration !== actualDuration
-                        ? "warning.main"
-                        : "text.disabled"
-                    }
                     fontSize="0.65rem"
+                    color="text.disabled"
                   >
                     Taken
                   </Typography>
@@ -1878,7 +1891,6 @@ const TaskDetailDialog = ({ open, onClose, task }) => {
           fullWidth
           variant="contained"
           color="primary"
-          size="small"
           sx={{ borderRadius: 2 }}
         >
           Close
@@ -1943,10 +1955,10 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
         <Box
           sx={{
             position: "sticky",
-            top: 64,
+            top: { xs: 56, sm: 64 },
             zIndex: 10,
             bgcolor: "background.default",
-            pt: 3,
+            pt: 1,
             pb: 2,
             px: 1,
             mb: 2,
@@ -2027,7 +2039,9 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
                       }}
                     >
                       <ListItemIcon sx={{ minWidth: 40 }}>
-                        <CheckCircleIcon sx={{ color: "success.main" }} />
+                        <RadioButtonCheckedOutlinedIcon
+                          sx={{ color: "text.secondary" }}
+                        />
                       </ListItemIcon>
                       <ListItemText
                         primary={
@@ -2090,7 +2104,6 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
         )}
       </Container>
 
-      {/* Include the new Modal */}
       <TaskDetailDialog
         open={Boolean(selectedTask)}
         task={selectedTask}
@@ -2449,6 +2462,21 @@ const App = () => {
 
       <ThemeProvider theme={theme}>
         <CssBaseline />
+
+        <GlobalStyles
+          styles={{
+            "@media (max-width: 600px)": {
+              "*::-webkit-scrollbar": {
+                display: "none",
+              },
+              "*": {
+                msOverflowStyle: "none",
+                scrollbarWidth: "none",
+              },
+            },
+          }}
+        />
+
         {isDeleting && (
           <Box
             sx={{

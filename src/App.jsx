@@ -131,20 +131,16 @@ const getDesignTokens = (mode) => ({
       paper: mode === "light" ? "#ffffff" : "#242424",
     },
     success: {
-      main: mode === "light" ? "#28be8a" : "#47d5a6", // bg
-      dark: mode === "light" ? "#1b7f5c" : "#22946e", // icon
+      main: mode === "light" ? "#1b7f5c" : "#22946e",
     },
     warning: {
-      main: mode === "light" ? "#dfae44" : "#d7ac61", // bg
-      dark: mode === "light" ? "#b8871f" : "#a87a2a", // icon
+      main: mode === "light" ? "#b8871f" : "#a87a2a",
     },
     error: {
-      main: mode === "light" ? "#d06262" : "#d94a4a", // bg
-      dark: mode === "light" ? "#b13535" : "#9c2121", // icon
+      main: mode === "light" ? "#b13535" : "#9c2121",
     },
     info: {
-      main: mode === "light" ? "#347ada" : "#4077d1", // bg
-      dark: mode === "light" ? "#1e56a3" : "#21498a", // icon
+      main: mode === "light" ? "#1e56a3" : "#21498a",
     },
     text: {
       primary: mode === "light" ? "#000000" : "#ffffff",
@@ -216,13 +212,11 @@ const getDaysLeft = (endDate) => {
   const diffTime = target - today;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays < 0)
-    return { label: `${Math.abs(diffDays)}d Overdue`, color: "error" };
-  if (diffDays === 0) return { label: "Due today", color: "warning" };
-  if (diffDays === 1) return { label: "Due tomorrow", color: "warning" };
-  if (diffDays <= 3)
-    return { label: `${diffDays} days left`, color: "warning" };
-  return { label: `${diffDays} days left`, color: "success" };
+  if (diffDays < 0) return { label: "Overdue", color: "error" };
+  if (diffDays === 0) return { label: "Today", color: "warning" };
+  if (diffDays === 1) return { label: "Tomorrow", color: "warning" };
+
+  return { label: `${diffDays} days left`, color: "default" };
 };
 
 const formatTo12Hour = (timeStr) => {
@@ -477,7 +471,7 @@ const HomeView = ({
         <Box
           sx={{
             position: "sticky",
-            top: { xs: 56, sm: 64 },
+            top: { xs: 55, sm: 64 },
             zIndex: 10,
             bgcolor: "background.default",
             pt: 1,
@@ -588,10 +582,13 @@ const HomeView = ({
                       </Box>
                       <Chip
                         label={daysMeta.label}
+                        color={daysMeta.color}
+                        variant="filled"
                         size="small"
                         sx={{
                           fontWeight: 500,
                           flexShrink: 0,
+                          fontSize: 12,
                         }}
                       />
                     </Stack>
@@ -704,16 +701,15 @@ const HomeView = ({
         onClose={() => setIsSortOpen(false)}
         sortConfig={sortConfig}
         setSortConfig={setSortConfig}
-        title="Sort plans by"
         options={[
           { label: "Start date", key: "startDate", icon: <EventIcon /> },
-          { label: "Progress level", key: "progress", icon: <BarChartIcon /> },
+          { label: "Progress", key: "progress", icon: <BarChartIcon /> },
           {
-            label: "Urgency (Days left)",
+            label: "Urgency",
             key: "daysLeft",
             icon: <AccessTimeFilledIcon />,
           },
-          { label: "Number of tasks", key: "actions", icon: <TaskIcon /> },
+          { label: "Task count", key: "actions", icon: <TaskIcon /> },
         ]}
       />
     </Box>
@@ -829,7 +825,14 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               horizontal: "right",
             }}
             PaperProps={{
-              sx: { borderRadius: 2, minWidth: 150, mt: 1 },
+              elevation: 3,
+              sx: {
+                borderRadius: 2,
+                minWidth: 150,
+                mt: 1,
+                backgroundImage: "none",
+                bgcolor: "background.paper",
+              },
             }}
           >
             <MenuItem onClick={handleEdit}>
@@ -871,9 +874,11 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
               label={daysMeta.label}
               size="small"
               variant="filled"
+              color={daysMeta.color}
               sx={{
                 fontWeight: 500,
                 flexShrink: 0,
+                fontSize: 12,
               }}
             />
 
@@ -895,7 +900,8 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
             variant="outlined"
             sx={{
               mt: 3,
-              p: 1.5,
+              py: 1.5,
+              px: 1,
               borderRadius: 3,
               borderStyle: "dashed",
             }}
@@ -1757,7 +1763,6 @@ const TaskDetailDialog = ({ open, onClose, task }) => {
           fontWeight="bold"
           sx={{
             mt: 0.5,
-            lineHeight: 1.2,
             fontSize: "1.1rem",
             display: "-webkit-box",
             overflow: "hidden",
@@ -1774,7 +1779,7 @@ const TaskDetailDialog = ({ open, onClose, task }) => {
           <Divider sx={{ borderStyle: "dashed" }} />
 
           {/* Grid for Details (2 Columns) */}
-          <Box sx={{ display: "flex", gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
             {/* Left Col: Dates */}
             <Box sx={{ flex: 1 }}>
               <Stack spacing={1}>
@@ -2145,15 +2150,14 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
         onClose={() => setIsSortOpen(false)}
         sortConfig={historySort}
         setSortConfig={setHistorySort}
-        title="Sort records by"
         options={[
           {
-            label: "Completion date",
+            label: "Completed on",
             key: "actualDate",
             icon: <HistoryIcon />,
           },
           {
-            label: "Actual taken (days)",
+            label: "Time Taken",
             key: "actualDays",
             icon: <AccessTimeIcon />,
           },

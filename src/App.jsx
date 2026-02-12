@@ -96,7 +96,12 @@ import {
   ArrowDownward as ArrowDownwardIcon,
   ArrowUpward as ArrowUpwardIcon,
 } from "@mui/icons-material";
-import { CheckIcon } from "lucide-react";
+
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import dayjs from "dayjs";
 
 // --- Firebase Config ---
 const firebaseConfig = {
@@ -1316,27 +1321,27 @@ const FormView = ({
                 InputProps={{ style: { fontSize: "1.25rem", fontWeight: 600 } }}
               />
               <Stack direction="row" spacing={2}>
-                <TextField
-                  type="date"
+                <DatePicker
                   label="Start"
-                  fullWidth
-                  value={formData.startDate}
-                  sx={inputIconStyles}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
+                  value={formData.startDate ? dayjs(formData.startDate) : null}
+                  onChange={(newValue) =>
+                    setFormData({
+                      ...formData,
+                      startDate: newValue ? newValue.format("YYYY-MM-DD") : "",
+                    })
                   }
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ textField: { fullWidth: true } }}
                 />
-                <TextField
-                  type="date"
+                <DatePicker
                   label="Deadline"
-                  fullWidth
-                  value={formData.endDate}
-                  sx={inputIconStyles}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
+                  value={formData.endDate ? dayjs(formData.endDate) : null}
+                  onChange={(newValue) =>
+                    setFormData({
+                      ...formData,
+                      endDate: newValue ? newValue.format("YYYY-MM-DD") : "",
+                    })
                   }
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ textField: { fullWidth: true } }}
                 />
               </Stack>
 
@@ -1425,69 +1430,91 @@ const FormView = ({
                     </Box>
 
                     <Stack spacing={3}>
-                      <TextField
-                        type="date"
+                      <DatePicker
                         label="Date"
-                        fullWidth
-                        size="small"
-                        sx={inputIconStyles}
-                        value={action.startDate || ""}
-                        inputProps={{
-                          min: formData.startDate,
-                          max: formData.endDate,
-                        }}
-                        onChange={(e) =>
-                          updateActionField(idx, "startDate", e.target.value)
+                        value={
+                          action.startDate ? dayjs(action.startDate) : null
                         }
-                        InputLabelProps={{ shrink: true }}
+                        onChange={(newValue) =>
+                          updateActionField(
+                            idx,
+                            "startDate",
+                            newValue ? newValue.format("YYYY-MM-DD") : "",
+                          )
+                        }
+                        minDate={
+                          formData.startDate ? dayjs(formData.startDate) : null
+                        }
+                        maxDate={
+                          formData.endDate ? dayjs(formData.endDate) : null
+                        }
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
                       />
 
                       {scheduleMode === "range" ? (
-                        <TextField
-                          type="date"
+                        <DatePicker
                           label="End Date"
-                          fullWidth
-                          size="small"
-                          sx={inputIconStyles}
-                          value={action.endDate || ""}
-                          inputProps={{
-                            min: action.startDate || formData.startDate,
-                            max: formData.endDate,
-                          }}
-                          onChange={(e) =>
-                            updateActionField(idx, "endDate", e.target.value)
+                          value={action.endDate ? dayjs(action.endDate) : null}
+                          onChange={(newValue) =>
+                            updateActionField(
+                              idx,
+                              "endDate",
+                              newValue ? newValue.format("YYYY-MM-DD") : "",
+                            )
                           }
-                          InputLabelProps={{ shrink: true }}
+                          minDate={
+                            action.startDate
+                              ? dayjs(action.startDate)
+                              : formData.startDate
+                                ? dayjs(formData.startDate)
+                                : null
+                          }
+                          maxDate={
+                            formData.endDate ? dayjs(formData.endDate) : null
+                          }
+                          slotProps={{
+                            textField: { size: "small", fullWidth: true },
+                          }}
                         />
                       ) : (
                         <Stack direction="row" spacing={2}>
-                          <TextField
-                            type="time"
+                          <TimePicker
                             label="From"
-                            fullWidth
-                            size="small"
-                            sx={inputIconStyles}
-                            value={action.startTime || ""}
-                            onChange={(e) =>
+                            value={
+                              action.startTime
+                                ? dayjs(`2000-01-01T${action.startTime}`)
+                                : null
+                            }
+                            onChange={(newValue) =>
                               updateActionField(
                                 idx,
                                 "startTime",
-                                e.target.value,
+                                newValue ? newValue.format("HH:mm") : "",
                               )
                             }
-                            InputLabelProps={{ shrink: true }}
+                            slotProps={{
+                              textField: { size: "small", fullWidth: true },
+                            }}
                           />
-                          <TextField
-                            type="time"
+                          <TimePicker
                             label="To"
-                            fullWidth
-                            size="small"
-                            sx={inputIconStyles}
-                            value={action.endTime || ""}
-                            onChange={(e) =>
-                              updateActionField(idx, "endTime", e.target.value)
+                            value={
+                              action.endTime
+                                ? dayjs(`2000-01-01T${action.endTime}`)
+                                : null
                             }
-                            InputLabelProps={{ shrink: true }}
+                            onChange={(newValue) =>
+                              updateActionField(
+                                idx,
+                                "endTime",
+                                newValue ? newValue.format("HH:mm") : "",
+                              )
+                            }
+                            slotProps={{
+                              textField: { size: "small", fullWidth: true },
+                            }}
                           />
                         </Stack>
                       )}
@@ -1522,37 +1549,41 @@ const FormView = ({
                           COMPLETION (LOGGED)
                         </Typography>
                         <Stack direction="row" spacing={2}>
-                          <TextField
-                            type="date"
+                          <DatePicker
                             label="Actual Date"
-                            fullWidth
-                            sx={inputIconStyles}
-                            size="small"
-                            value={action.actualDate || ""}
-                            onChange={(e) =>
+                            value={
+                              action.actualDate
+                                ? dayjs(action.actualDate)
+                                : null
+                            }
+                            onChange={(newValue) =>
                               updateActionField(
                                 idx,
                                 "actualDate",
-                                e.target.value,
+                                newValue ? newValue.format("YYYY-MM-DD") : "",
                               )
                             }
-                            InputLabelProps={{ shrink: true }}
+                            slotProps={{
+                              textField: { size: "small", fullWidth: true },
+                            }}
                           />
-                          <TextField
-                            type="time"
+                          <TimePicker
                             label="Actual Time"
-                            fullWidth
-                            sx={inputIconStyles}
-                            size="small"
-                            value={action.actualTime || ""}
-                            onChange={(e) =>
+                            value={
+                              action.actualTime
+                                ? dayjs(`2000-01-01T${action.actualTime}`)
+                                : null
+                            }
+                            onChange={(newValue) =>
                               updateActionField(
                                 idx,
                                 "actualTime",
-                                e.target.value,
+                                newValue ? newValue.format("HH:mm") : "",
                               )
                             }
-                            InputLabelProps={{ shrink: true }}
+                            slotProps={{
+                              textField: { size: "small", fullWidth: true },
+                            }}
                           />
                         </Stack>
                       </Box>
@@ -1581,9 +1612,8 @@ const FormView = ({
         <DialogTitle sx={{ fontWeight: 700 }}>Remove Task?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to remove "
-            {formData.actions[taskToDelete]?.title || "this task"}"? This action
-            cannot be undone.
+            Are you sure you want to remove this task? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -2460,165 +2490,167 @@ const App = () => {
         </Paper>
       )}
 
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
 
-        <GlobalStyles
-          styles={{
-            "@media (max-width: 600px)": {
-              "*::-webkit-scrollbar": {
-                display: "none",
+          <GlobalStyles
+            styles={{
+              "@media (max-width: 600px)": {
+                "*::-webkit-scrollbar": {
+                  display: "none",
+                },
+                "*": {
+                  msOverflowStyle: "none",
+                  scrollbarWidth: "none",
+                },
               },
-              "*": {
-                msOverflowStyle: "none",
-                scrollbarWidth: "none",
-              },
-            },
-          }}
-        />
+            }}
+          />
 
-        {isDeleting && (
-          <Box
-            sx={{
-              position: "fixed",
-              inset: 0,
-              bgcolor: "rgba(255, 255, 255, 0.7)",
-              zIndex: 9999,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              backdropFilter: "blur(4px)",
+          {isDeleting && (
+            <Box
+              sx={{
+                position: "fixed",
+                inset: 0,
+                bgcolor: "rgba(255, 255, 255, 0.7)",
+                zIndex: 9999,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              <CircularProgress size={50} thickness={4} />
+              <Typography
+                sx={{ mt: 2, fontWeight: 600, color: "text.secondary" }}
+              >
+                Removing plan...
+              </Typography>
+            </Box>
+          )}
+
+          <Drawer
+            anchor="left"
+            open={isNavOpen}
+            onClose={toggleDrawer(false)}
+            PaperProps={{
+              sx: {
+                width: 280,
+                backgroundImage: "none",
+                border: "none",
+              },
             }}
           >
-            <CircularProgress size={50} thickness={4} />
-            <Typography
-              sx={{ mt: 2, fontWeight: 600, color: "text.secondary" }}
-            >
-              Removing plan...
-            </Typography>
-          </Box>
-        )}
+            <Toolbar />
 
-        <Drawer
-          anchor="left"
-          open={isNavOpen}
-          onClose={toggleDrawer(false)}
-          PaperProps={{
-            sx: {
-              width: 280,
-              backgroundImage: "none",
-              border: "none",
-            },
-          }}
-        >
-          <Toolbar />
-
-          <List sx={{ px: 2, mt: 2 }}>
-            {[
-              { label: "Dashboard", value: "home", icon: <HomeIcon /> },
-              { label: "Completed", value: "history", icon: <HistoryIcon /> },
-              { label: "Profile", value: "profile", icon: <PersonIcon /> },
-            ].map((item) => (
-              <ListItem key={item.value} disablePadding sx={{ mb: 1 }}>
-                <ListItemButton
-                  selected={view === item.value}
-                  onClick={() => {
-                    setView(item.value);
-                    setIsNavOpen(false);
-                  }}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: view === item.value ? "primary.main" : "inherit",
+            <List sx={{ px: 2, mt: 2 }}>
+              {[
+                { label: "Dashboard", value: "home", icon: <HomeIcon /> },
+                { label: "Completed", value: "history", icon: <HistoryIcon /> },
+                { label: "Profile", value: "profile", icon: <PersonIcon /> },
+              ].map((item) => (
+                <ListItem key={item.value} disablePadding sx={{ mb: 1 }}>
+                  <ListItemButton
+                    selected={view === item.value}
+                    onClick={() => {
+                      setView(item.value);
+                      setIsNavOpen(false);
                     }}
+                    sx={{ borderRadius: 2 }}
                   >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    primaryTypographyProps={{
-                      color:
-                        view === item.value ? "primary.main" : "textPrimary",
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Drawer>
+                    <ListItemIcon
+                      sx={{
+                        color: view === item.value ? "primary.main" : "inherit",
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.label}
+                      primaryTypographyProps={{
+                        color:
+                          view === item.value ? "primary.main" : "textPrimary",
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Drawer>
 
-        {view === "home" && (
-          <HomeView
-            user={user}
-            plans={sortedPlans}
-            setView={setView}
-            setSelectedPlanId={setSelectedPlanId}
-            sortConfig={sortConfig}
-            setSortConfig={setSortConfig}
-            onMenuClick={toggleDrawer(true)}
+          {view === "home" && (
+            <HomeView
+              user={user}
+              plans={sortedPlans}
+              setView={setView}
+              setSelectedPlanId={setSelectedPlanId}
+              sortConfig={sortConfig}
+              setSortConfig={setSortConfig}
+              onMenuClick={toggleDrawer(true)}
+            />
+          )}
+          {view === "detail" && (
+            <DetailView
+              plan={plans.find((p) => p.id === selectedPlanId)}
+              setView={setView}
+              onRequestDelete={handleRequestDelete}
+              updateStatus={updateStatus}
+            />
+          )}
+          {(view === "create" || view === "edit") && (
+            <FormView
+              user={user}
+              plans={plans}
+              selectedPlanId={selectedPlanId}
+              setSelectedPlanId={setSelectedPlanId}
+              setView={setView}
+              isSaving={isSaving}
+              setIsSaving={setIsSaving}
+              showMessage={showMessage}
+            />
+          )}
+          {view === "profile" && (
+            <ProfileView
+              user={user}
+              handleLogout={handleLogout}
+              mode={mode}
+              setMode={setMode}
+              onMenuClick={toggleDrawer(true)}
+            />
+          )}
+          {view === "history" && (
+            <HistoryView
+              plans={plans}
+              setView={setView}
+              user={user}
+              onMenuClick={() => setIsNavOpen(true)}
+            />
+          )}
+          <DeleteConfirmDialog
+            open={deleteConfirmation.open}
+            onClose={() => setDeleteConfirmation({ open: false, planId: null })}
+            onConfirm={handleConfirmDelete}
           />
-        )}
-        {view === "detail" && (
-          <DetailView
-            plan={plans.find((p) => p.id === selectedPlanId)}
-            setView={setView}
-            onRequestDelete={handleRequestDelete}
-            updateStatus={updateStatus}
-          />
-        )}
-        {(view === "create" || view === "edit") && (
-          <FormView
-            user={user}
-            plans={plans}
-            selectedPlanId={selectedPlanId}
-            setSelectedPlanId={setSelectedPlanId}
-            setView={setView}
-            isSaving={isSaving}
-            setIsSaving={setIsSaving}
-            showMessage={showMessage}
-          />
-        )}
-        {view === "profile" && (
-          <ProfileView
-            user={user}
-            handleLogout={handleLogout}
-            mode={mode}
-            setMode={setMode}
-            onMenuClick={toggleDrawer(true)}
-          />
-        )}
-        {view === "history" && (
-          <HistoryView
-            plans={plans}
-            setView={setView}
-            user={user}
-            onMenuClick={() => setIsNavOpen(true)}
-          />
-        )}
-        <DeleteConfirmDialog
-          open={deleteConfirmation.open}
-          onClose={() => setDeleteConfirmation({ open: false, planId: null })}
-          onConfirm={handleConfirmDelete}
-        />
-        <Snackbar
-          open={notification.open}
-          autoHideDuration={4000}
-          onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          sx={{ bottom: { xs: 90, sm: 24 } }}
-        >
-          <Alert
+          <Snackbar
+            open={notification.open}
+            autoHideDuration={4000}
             onClose={handleCloseNotification}
-            severity={notification.severity}
-            variant="filled"
-            sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            sx={{ bottom: { xs: 90, sm: 24 } }}
           >
-            {notification.message}
-          </Alert>
-        </Snackbar>
-      </ThemeProvider>
+            <Alert
+              onClose={handleCloseNotification}
+              severity={notification.severity}
+              variant="filled"
+              sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+            >
+              {notification.message}
+            </Alert>
+          </Snackbar>
+        </ThemeProvider>
+      </LocalizationProvider>
     </>
   );
 };

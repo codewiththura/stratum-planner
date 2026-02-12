@@ -833,8 +833,12 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
         elevation={0}
         sx={{ bgcolor: "background.paper" }}
       >
-        <Toolbar>
-          <IconButton edge="start" onClick={() => setView("home")}>
+        <Toolbar sx={{ py: 0.5 }}>
+          <IconButton
+            edge="start"
+            onClick={() => setView("home")}
+            sx={{ ml: 0 }}
+          >
             <ArrowBackIcon />
           </IconButton>
           <Box sx={{ flexGrow: 1 }} />
@@ -938,7 +942,6 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           >
             <Stack
               direction="row"
-              divider={<Divider orientation="vertical" flexItem />}
               spacing={{ xs: 0, sm: 1 }}
               justifyContent="space-between"
               alignItems="center"
@@ -1341,16 +1344,316 @@ const FormView = ({
           </Button>
         </Toolbar>
       </AppBar>
-      {isSaving ? (
+
+      <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
+        <Stack spacing={3}>
+          <TextField
+            label="Goal / Title"
+            fullWidth
+            required
+            variant="standard"
+            value={formData.title}
+            error={!!errors.title}
+            helperText={errors.title}
+            onChange={(e) => {
+              setFormData({ ...formData, title: e.target.value });
+              if (errors.title) setErrors({ ...errors, title: null });
+            }}
+          />
+          <Stack direction="row" spacing={2}>
+            <DatePicker
+              label="Start"
+              value={formData.startDate ? dayjs(formData.startDate) : null}
+              onChange={(newValue) =>
+                setFormData({
+                  ...formData,
+                  startDate: newValue ? newValue.format("YYYY-MM-DD") : "",
+                })
+              }
+              slotProps={{ textField: { fullWidth: true } }}
+            />
+            <DatePicker
+              label="Deadline"
+              value={formData.endDate ? dayjs(formData.endDate) : null}
+              onChange={(newValue) => {
+                setFormData({
+                  ...formData,
+                  endDate: newValue ? newValue.format("YYYY-MM-DD") : "",
+                });
+                if (errors.endDate) setErrors({ ...errors, endDate: null });
+              }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                  error: !!errors.endDate,
+                  helperText: errors.endDate,
+                },
+              }}
+            />
+          </Stack>
+
+          <Divider sx={{ my: 2 }} />
+          {formData.actions.map((action, idx) => {
+            const scheduleMode =
+              action.startTime || action.endTime ? "time" : "range";
+
+            return (
+              <Paper
+                key={idx}
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  mb: 2,
+                  borderRadius: 3,
+                  bgcolor: "background.paper",
+                  borderColor: "divider",
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ mb: 2 }}
+                >
+                  <TextField
+                    fullWidth
+                    variant="standard"
+                    placeholder="Task name..."
+                    value={action.title}
+                    onChange={(e) => {
+                      updateActionField(idx, "title", e.target.value);
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => setTaskToDelete(idx)}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    mb: 1,
+                    mr: 1,
+                  }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={scheduleMode === "time"}
+                        onChange={(e) => {
+                          const mode = e.target.checked ? "time" : "range";
+                          if (mode === "range") {
+                            updateActionField(idx, {
+                              startTime: "",
+                              endTime: "",
+                            });
+                          } else {
+                            updateActionField(idx, {
+                              endDate: "",
+                              startTime: "09:00",
+                            });
+                          }
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        {scheduleMode === "time" ? "Time Slot" : "Date Range"}
+                      </Typography>
+                    }
+                    labelPlacement="start"
+                  />
+                </Box>
+
+                <Stack spacing={3}>
+                  <DatePicker
+                    label="Date"
+                    value={action.startDate ? dayjs(action.startDate) : null}
+                    onChange={(newValue) =>
+                      updateActionField(
+                        idx,
+                        "startDate",
+                        newValue ? newValue.format("YYYY-MM-DD") : "",
+                      )
+                    }
+                    minDate={
+                      formData.startDate ? dayjs(formData.startDate) : null
+                    }
+                    maxDate={formData.endDate ? dayjs(formData.endDate) : null}
+                    slotProps={{
+                      textField: { size: "small", fullWidth: true },
+                    }}
+                  />
+
+                  {scheduleMode === "range" ? (
+                    <DatePicker
+                      label="End Date"
+                      value={action.endDate ? dayjs(action.endDate) : null}
+                      onChange={(newValue) =>
+                        updateActionField(
+                          idx,
+                          "endDate",
+                          newValue ? newValue.format("YYYY-MM-DD") : "",
+                        )
+                      }
+                      minDate={
+                        action.startDate
+                          ? dayjs(action.startDate)
+                          : formData.startDate
+                            ? dayjs(formData.startDate)
+                            : null
+                      }
+                      maxDate={
+                        formData.endDate ? dayjs(formData.endDate) : null
+                      }
+                      slotProps={{
+                        textField: { size: "small", fullWidth: true },
+                      }}
+                    />
+                  ) : (
+                    <Stack direction="row" spacing={2}>
+                      <TimePicker
+                        label="From"
+                        value={
+                          action.startTime
+                            ? dayjs(`2000-01-01T${action.startTime}`)
+                            : null
+                        }
+                        onChange={(newValue) =>
+                          updateActionField(
+                            idx,
+                            "startTime",
+                            newValue ? newValue.format("HH:mm") : "",
+                          )
+                        }
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
+                      />
+                      <TimePicker
+                        label="To"
+                        value={
+                          action.endTime
+                            ? dayjs(`2000-01-01T${action.endTime}`)
+                            : null
+                        }
+                        onChange={(newValue) =>
+                          updateActionField(
+                            idx,
+                            "endTime",
+                            newValue ? newValue.format("HH:mm") : "",
+                          )
+                        }
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
+                      />
+                    </Stack>
+                  )}
+
+                  <TextField
+                    placeholder="Notes..."
+                    fullWidth
+                    variant="standard"
+                    size="small"
+                    multiline
+                    mt={1}
+                    value={action.description || ""}
+                    onChange={(e) =>
+                      updateActionField(idx, "description", e.target.value)
+                    }
+                  />
+                </Stack>
+
+                {action.status === STATUS.FINISHED && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      pt: 2,
+                      borderTop: "1px solid",
+                      borderColor: "divider",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{ mb: 2, display: "block" }}
+                    >
+                      COMPLETION (LOGGED)
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                      <DatePicker
+                        label="Actual Date"
+                        value={
+                          action.actualDate ? dayjs(action.actualDate) : null
+                        }
+                        onChange={(newValue) =>
+                          updateActionField(
+                            idx,
+                            "actualDate",
+                            newValue ? newValue.format("YYYY-MM-DD") : "",
+                          )
+                        }
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
+                      />
+                      <TimePicker
+                        label="Actual Time"
+                        value={
+                          action.actualTime
+                            ? dayjs(`2000-01-01T${action.actualTime}`)
+                            : null
+                        }
+                        onChange={(newValue) =>
+                          updateActionField(
+                            idx,
+                            "actualTime",
+                            newValue ? newValue.format("HH:mm") : "",
+                          )
+                        }
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
+                      />
+                    </Stack>
+                  </Box>
+                )}
+              </Paper>
+            );
+          })}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={addActionField}
+            variant="outlined"
+            sx={{ borderStyle: "dashed", justifyContent: "flex-start" }}
+          >
+            Add Task
+          </Button>
+        </Stack>
+      </Container>
+
+      {isSaving && (
         <Box
           sx={{
-            height: "100%",
+            position: "fixed",
+            inset: 0,
+            bgcolor: "background",
+            zIndex: 9999,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "background",
-            pb: 10,
+            backdropFilter: "blur(4px)",
           }}
         >
           <CircularProgress size={60} thickness={4} />
@@ -1361,313 +1664,6 @@ const FormView = ({
             {existing ? "Updating plan..." : "Creating plan..."}
           </Typography>
         </Box>
-      ) : (
-        <>
-          <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
-            <Stack spacing={3}>
-              <TextField
-                label="Goal / Title"
-                fullWidth
-                required
-                variant="standard"
-                value={formData.title}
-                error={!!errors.title}
-                helperText={errors.title}
-                onChange={(e) => {
-                  setFormData({ ...formData, title: e.target.value });
-                  if (errors.title) setErrors({ ...errors, title: null });
-                }}
-              />
-              <Stack direction="row" spacing={2}>
-                <DatePicker
-                  label="Start"
-                  value={formData.startDate ? dayjs(formData.startDate) : null}
-                  onChange={(newValue) =>
-                    setFormData({
-                      ...formData,
-                      startDate: newValue ? newValue.format("YYYY-MM-DD") : "",
-                    })
-                  }
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
-                <DatePicker
-                  label="Deadline"
-                  value={formData.endDate ? dayjs(formData.endDate) : null}
-                  onChange={(newValue) => {
-                    setFormData({
-                      ...formData,
-                      endDate: newValue ? newValue.format("YYYY-MM-DD") : "",
-                    });
-                    if (errors.endDate) setErrors({ ...errors, endDate: null });
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: true,
-                      error: !!errors.endDate,
-                      helperText: errors.endDate,
-                    },
-                  }}
-                />
-              </Stack>
-
-              <Divider sx={{ my: 2 }} />
-              {formData.actions.map((action, idx) => {
-                const scheduleMode =
-                  action.startTime || action.endTime ? "time" : "range";
-
-                return (
-                  <Paper
-                    key={idx}
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      mb: 2,
-                      borderRadius: 3,
-                      bgcolor: "background.paper",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      sx={{ mb: 2 }}
-                    >
-                      <TextField
-                        fullWidth
-                        variant="standard"
-                        placeholder="Task name..."
-                        value={action.title}
-                        onChange={(e) => {
-                          updateActionField(idx, "title", e.target.value);
-                        }}
-                      />
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => setTaskToDelete(idx)}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        mb: 1,
-                        mr: 1,
-                      }}
-                    >
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            size="small"
-                            checked={scheduleMode === "time"}
-                            onChange={(e) => {
-                              const mode = e.target.checked ? "time" : "range";
-                              if (mode === "range") {
-                                updateActionField(idx, {
-                                  startTime: "",
-                                  endTime: "",
-                                });
-                              } else {
-                                updateActionField(idx, {
-                                  endDate: "",
-                                  startTime: "09:00",
-                                });
-                              }
-                            }}
-                          />
-                        }
-                        label={
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary" }}
-                          >
-                            {scheduleMode === "time"
-                              ? "Time Slot"
-                              : "Date Range"}
-                          </Typography>
-                        }
-                        labelPlacement="start"
-                      />
-                    </Box>
-
-                    <Stack spacing={3}>
-                      <DatePicker
-                        label="Date"
-                        value={
-                          action.startDate ? dayjs(action.startDate) : null
-                        }
-                        onChange={(newValue) =>
-                          updateActionField(
-                            idx,
-                            "startDate",
-                            newValue ? newValue.format("YYYY-MM-DD") : "",
-                          )
-                        }
-                        minDate={
-                          formData.startDate ? dayjs(formData.startDate) : null
-                        }
-                        maxDate={
-                          formData.endDate ? dayjs(formData.endDate) : null
-                        }
-                        slotProps={{
-                          textField: { size: "small", fullWidth: true },
-                        }}
-                      />
-
-                      {scheduleMode === "range" ? (
-                        <DatePicker
-                          label="End Date"
-                          value={action.endDate ? dayjs(action.endDate) : null}
-                          onChange={(newValue) =>
-                            updateActionField(
-                              idx,
-                              "endDate",
-                              newValue ? newValue.format("YYYY-MM-DD") : "",
-                            )
-                          }
-                          minDate={
-                            action.startDate
-                              ? dayjs(action.startDate)
-                              : formData.startDate
-                                ? dayjs(formData.startDate)
-                                : null
-                          }
-                          maxDate={
-                            formData.endDate ? dayjs(formData.endDate) : null
-                          }
-                          slotProps={{
-                            textField: { size: "small", fullWidth: true },
-                          }}
-                        />
-                      ) : (
-                        <Stack direction="row" spacing={2}>
-                          <TimePicker
-                            label="From"
-                            value={
-                              action.startTime
-                                ? dayjs(`2000-01-01T${action.startTime}`)
-                                : null
-                            }
-                            onChange={(newValue) =>
-                              updateActionField(
-                                idx,
-                                "startTime",
-                                newValue ? newValue.format("HH:mm") : "",
-                              )
-                            }
-                            slotProps={{
-                              textField: { size: "small", fullWidth: true },
-                            }}
-                          />
-                          <TimePicker
-                            label="To"
-                            value={
-                              action.endTime
-                                ? dayjs(`2000-01-01T${action.endTime}`)
-                                : null
-                            }
-                            onChange={(newValue) =>
-                              updateActionField(
-                                idx,
-                                "endTime",
-                                newValue ? newValue.format("HH:mm") : "",
-                              )
-                            }
-                            slotProps={{
-                              textField: { size: "small", fullWidth: true },
-                            }}
-                          />
-                        </Stack>
-                      )}
-
-                      <TextField
-                        placeholder="Notes..."
-                        fullWidth
-                        variant="standard"
-                        size="small"
-                        multiline
-                        mt={1}
-                        value={action.description || ""}
-                        onChange={(e) =>
-                          updateActionField(idx, "description", e.target.value)
-                        }
-                      />
-                    </Stack>
-
-                    {action.status === STATUS.FINISHED && (
-                      <Box
-                        sx={{
-                          mt: 2,
-                          pt: 2,
-                          borderTop: "1px solid",
-                          borderColor: "divider",
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{ mb: 2, display: "block" }}
-                        >
-                          COMPLETION (LOGGED)
-                        </Typography>
-                        <Stack direction="row" spacing={2}>
-                          <DatePicker
-                            label="Actual Date"
-                            value={
-                              action.actualDate
-                                ? dayjs(action.actualDate)
-                                : null
-                            }
-                            onChange={(newValue) =>
-                              updateActionField(
-                                idx,
-                                "actualDate",
-                                newValue ? newValue.format("YYYY-MM-DD") : "",
-                              )
-                            }
-                            slotProps={{
-                              textField: { size: "small", fullWidth: true },
-                            }}
-                          />
-                          <TimePicker
-                            label="Actual Time"
-                            value={
-                              action.actualTime
-                                ? dayjs(`2000-01-01T${action.actualTime}`)
-                                : null
-                            }
-                            onChange={(newValue) =>
-                              updateActionField(
-                                idx,
-                                "actualTime",
-                                newValue ? newValue.format("HH:mm") : "",
-                              )
-                            }
-                            slotProps={{
-                              textField: { size: "small", fullWidth: true },
-                            }}
-                          />
-                        </Stack>
-                      </Box>
-                    )}
-                  </Paper>
-                );
-              })}
-              <Button
-                startIcon={<AddIcon />}
-                onClick={addActionField}
-                variant="outlined"
-                sx={{ borderStyle: "dashed", justifyContent: "flex-start" }}
-              >
-                Add Task
-              </Button>
-            </Stack>
-          </Container>
-        </>
       )}
 
       <DeleteConfirmDialog
@@ -2559,7 +2555,7 @@ const App = () => {
               sx={{
                 position: "fixed",
                 inset: 0,
-                bgcolor: "rgba(255, 255, 255, 0.7)",
+                bgcolor: "background",
                 zIndex: 9999,
                 display: "flex",
                 flexDirection: "column",

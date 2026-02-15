@@ -195,6 +195,22 @@ const getDesignTokens = (mode) => ({
         }),
       },
     },
+    MuiPickersLayout: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          backgroundColor: theme.palette.background.paper,
+          backgroundImage: "none",
+        }),
+      },
+    },
+    MuiPickersModalDialog: {
+      styleOverrides: {
+        paper: ({ theme }) => ({
+          backgroundColor: theme.palette.background.paper,
+          backgroundImage: "none",
+        }),
+      },
+    },
   },
 });
 
@@ -2179,8 +2195,10 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
                                     ).toLocaleDateString(undefined, {
                                       month: "short",
                                       day: "numeric",
-                                    })}{" "}
-                                    • {formatTo12Hour(task.actualTime)}
+                                    })}
+                                    {task.actualTime && (
+                                      <> • {formatTo12Hour(task.actualTime)}</>
+                                    )}
                                   </Typography>
                                 </Stack>
                               )}

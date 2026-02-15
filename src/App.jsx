@@ -629,10 +629,12 @@ const HomeView = ({
                           Overall Progress
                         </Typography>
                         <Typography
-                          variant="caption"
-                          fontWeight="600"
-                          fontSize={14}
-                          color="primary"
+                          variant="h6"
+                          fontWeight="bold"
+                          color={
+                            progress === 100 ? "success.main" : "primary.main"
+                          }
+                          sx={{ ml: "auto !important" }}
                         >
                           {Math.round(progress)}%
                         </Typography>
@@ -915,11 +917,10 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                 fontSize: 12,
               }}
             />
-
             <Typography
               variant="h6"
               fontWeight="bold"
-              color="primary"
+              color={progress === 100 ? "success.main" : "primary.main"}
               sx={{ ml: "auto !important" }}
             >
               {Math.round(progress)}%
@@ -928,6 +929,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
           <LinearProgress
             variant="determinate"
             value={progress}
+            color={progress === 100 ? "success" : "primary"}
             sx={{ height: 8, borderRadius: 4, my: 3 }}
           />
           <Paper
@@ -2455,18 +2457,34 @@ const App = () => {
 
   if (loading || (user && dataLoading))
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          bgcolor: "background",
-        }}
-      >
-        <CircularProgress />
-      </Box>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box
+          sx={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: "background.default",
+          }}
+        >
+          <CircularProgress size={48} thickness={4} />
+          <Typography
+            variant="caption"
+            sx={{
+              mt: 2,
+              color: "text.secondary",
+              fontWeight: 500,
+              letterSpacing: 1,
+            }}
+          >
+            STRATUM
+          </Typography>
+        </Box>
+      </ThemeProvider>
     );
+
   if (!user) return <LoginView />;
 
   return (

@@ -798,6 +798,10 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handlers = useSwipeable({
     onSwipedRight: () => setView("home"),
     preventDefaultTouchmoveEvent: true,
@@ -2738,14 +2742,29 @@ const App = () => {
             open={notification.open}
             autoHideDuration={4000}
             onClose={handleCloseNotification}
-            // anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            // sx={{ bottom: { xs: 90, sm: 24 } }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            sx={{ bottom: { xs: 100, sm: 32 }, zIndex: 3000 }}
           >
             <Alert
               onClose={handleCloseNotification}
               severity={notification.severity}
-              // variant="filled"
-              // sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+              variant="filled"
+              sx={{
+                width: "100%",
+                borderRadius: 3,
+                bgcolor: "background.paper",
+                color: "text.primary",
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "0 12px 24px rgba(0,0,0,0.2)",
+                px: 3,
+                "& .MuiAlert-icon": {
+                  color:
+                    notification.severity === "success"
+                      ? "success.main"
+                      : "error.main",
+                },
+              }}
             >
               {notification.message}
             </Alert>

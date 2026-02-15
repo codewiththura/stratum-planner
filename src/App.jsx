@@ -794,7 +794,14 @@ const StatItem = ({ label, value }) => (
   </Box>
 );
 
-const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
+const DetailView = ({
+  plan,
+  setView,
+  onRequestDelete,
+  updateStatus,
+  user,
+  showMessage,
+}) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
@@ -827,6 +834,21 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
   const handleDelete = () => {
     handleMenuClose();
     onRequestDelete(plan.id);
+  };
+
+  const handleClosePlan = async () => {
+    handleMenuClose();
+    try {
+      await updateDoc(doc(db, "users", user.uid, "plans", plan.id), {
+        isClosed: true,
+      });
+
+      showMessage("Plan moved to archives", "info");
+      setView("home");
+    } catch (error) {
+      console.error("Error closing plan:", error);
+      showMessage("Failed to close plan", "error");
+    }
   };
 
   const totalActions = plan.actions.length;
@@ -907,6 +929,12 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                 <EditIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText>Edit Plan</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleClosePlan}>
+              <ListItemIcon>
+                <BlockIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Close Plan</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
@@ -1185,6 +1213,7 @@ const FormView = ({
           duration: "",
         },
       ],
+      isClosed: false,
     };
   });
 
@@ -2279,7 +2308,14 @@ const App = () => {
   });
 
   const sortedPlans = React.useMemo(() => {
-    let sortablePlans = [...plans];
+    let sortablePlans = [...plans].filter((plan) => {
+      const valid = plan.actions.filter((a) => a.status !== STATUS.CANCELED);
+      const done = plan.actions.filter((a) => a.status === STATUS.FINISHED);
+      const progress =
+        valid.length > 0 ? (done.length / valid.length) * 100 : 0;
+
+      return !plan.isClosed && progress < 100;
+    });
 
     sortablePlans.sort((a, b) => {
       let valA, valB;
@@ -2699,6 +2735,8 @@ const App = () => {
               setView={setView}
               onRequestDelete={handleRequestDelete}
               updateStatus={updateStatus}
+              user={user}
+              showMessage={showMessage}
             />
           )}
           {(view === "create" || view === "edit") && (

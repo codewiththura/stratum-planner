@@ -1027,82 +1027,73 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
                           </Typography>
                         )}
 
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          spacing={0.5}
-                          sx={{ mt: 1 }}
-                        >
-                          <EventIcon
-                            sx={{ fontSize: 12, color: "text.disabled" }}
-                          />
-                          <Typography
-                            variant="caption"
-                            fontWeight="500"
-                            color="textDisabled"
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                            }}
+                        {action.startDate && (
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.5}
+                            sx={{ mt: 1 }}
                           >
-                            {action.endDate ? (
-                              `${new Date(action.startDate).toLocaleDateString(
+                            <EventIcon
+                              sx={{ fontSize: 12, color: "text.disabled" }}
+                            />
+                            <Typography
+                              variant="caption"
+                              fontWeight="500"
+                              color="textDisabled"
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              {new Date(action.startDate).toLocaleDateString(
                                 undefined,
                                 {
                                   month: "short",
                                   day: "numeric",
                                 },
-                              )} - ${new Date(
-                                action.endDate,
-                              ).toLocaleDateString(undefined, {
-                                month: "short",
-                                day: "numeric",
-                              })}`
-                            ) : (
-                              <>
-                                {new Date(action.startDate).toLocaleDateString(
-                                  undefined,
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )}
-                                {action.startTime && (
-                                  <Box
-                                    component="span"
-                                    sx={{
-                                      ml: 0.5,
-                                      color: "disabled",
-                                      fontWeight: 500,
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    {" "}
-                                    {action.endTime ? (
-                                      <>
-                                        <ScheduleOutlinedIcon
-                                          sx={{
-                                            fontSize: 12,
-                                            mx: 0.5,
-                                            color: "text.disabled",
-                                          }}
-                                        />
-                                        {calculateDuration(
-                                          action.startTime,
-                                          action.endTime,
-                                        )}
-                                      </>
-                                    ) : (
-                                      action.startTime
-                                    )}
-                                  </Box>
-                                )}
-                              </>
-                            )}
-                          </Typography>
-                        </Stack>
+                              )}
+                              {action.endDate &&
+                                ` - ${new Date(
+                                  action.endDate,
+                                ).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                })}`}
+
+                              {action.startTime && (
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    ml: 0.5,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  {" • "}
+                                  {action.endTime ? (
+                                    <>
+                                      <ScheduleOutlinedIcon
+                                        sx={{
+                                          fontSize: 12,
+                                          mx: 0.5,
+                                          color: "text.disabled",
+                                        }}
+                                      />
+                                      {calculateDuration(
+                                        action.startTime,
+                                        action.endTime,
+                                      )}
+                                    </>
+                                  ) : (
+                                    formatTo12Hour(action.startTime)
+                                  )}
+                                </Box>
+                              )}
+                            </Typography>
+                          </Stack>
+                        )}
 
                         {action.status === STATUS.FINISHED &&
                           action.actualDate && (

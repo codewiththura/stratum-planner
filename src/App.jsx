@@ -1202,7 +1202,11 @@ const FormView = ({
       } else {
         let finalValue = value;
 
-        if (["startDate", "endDate", "specificDate"].includes(fieldOrUpdates)) {
+        if (value === null) {
+          finalValue = "";
+        } else if (
+          ["startDate", "endDate", "specificDate"].includes(fieldOrUpdates)
+        ) {
           finalValue = clampDate(value, prev.startDate, prev.endDate);
         }
 
@@ -1487,7 +1491,7 @@ const FormView = ({
                       updateActionField(
                         idx,
                         "startDate",
-                        newValue ? newValue.format("YYYY-MM-DD") : "",
+                        newValue ? newValue.format("YYYY-MM-DD") : null,
                       )
                     }
                     minDate={
@@ -1496,6 +1500,9 @@ const FormView = ({
                     maxDate={formData.endDate ? dayjs(formData.endDate) : null}
                     slotProps={{
                       textField: { size: "small", fullWidth: true },
+                      actionBar: {
+                        actions: ["clear", "cancel", "accept"],
+                      },
                     }}
                   />
 
@@ -1507,7 +1514,7 @@ const FormView = ({
                         updateActionField(
                           idx,
                           "endDate",
-                          newValue ? newValue.format("YYYY-MM-DD") : "",
+                          newValue ? newValue.format("YYYY-MM-DD") : null,
                         )
                       }
                       minDate={
@@ -1522,6 +1529,9 @@ const FormView = ({
                       }
                       slotProps={{
                         textField: { size: "small", fullWidth: true },
+                        actionBar: {
+                          actions: ["clear", "cancel", "accept"],
+                        },
                       }}
                     />
                   ) : (
@@ -1537,11 +1547,14 @@ const FormView = ({
                           updateActionField(
                             idx,
                             "startTime",
-                            newValue ? newValue.format("HH:mm") : "",
+                            newValue ? newValue.format("HH:mm") : null,
                           )
                         }
                         slotProps={{
                           textField: { size: "small", fullWidth: true },
+                          actionBar: {
+                            actions: ["clear", "cancel", "accept"],
+                          },
                         }}
                       />
                       <TimePicker
@@ -1555,11 +1568,14 @@ const FormView = ({
                           updateActionField(
                             idx,
                             "endTime",
-                            newValue ? newValue.format("HH:mm") : "",
+                            newValue ? newValue.format("HH:mm") : null,
                           )
                         }
                         slotProps={{
                           textField: { size: "small", fullWidth: true },
+                          actionBar: {
+                            actions: ["clear", "cancel", "accept"],
+                          },
                         }}
                       />
                     </Stack>

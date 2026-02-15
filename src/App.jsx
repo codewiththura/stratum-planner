@@ -543,9 +543,9 @@ const HomeView = ({
             {(() => {
               const labels = {
                 startDate: "Start date",
-                progress: "Progress level",
-                daysLeft: "Days left",
-                actions: "Number of tasks",
+                progress: "Progress",
+                daysLeft: "Urgency",
+                actions: "Task count",
               };
               return `Sort by: ${labels[sortConfig.key]}`;
             })()}
@@ -775,7 +775,7 @@ const DetailView = ({ plan, setView, onRequestDelete, updateStatus }) => {
     onSwipedRight: () => setView("home"),
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
-    delta: 50,
+    delta: 80,
   });
 
   if (!plan) return null;
@@ -1175,7 +1175,7 @@ const FormView = ({
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: false,
-    delta: 50,
+    delta: 80,
   });
 
   const isDirty = React.useMemo(() => {
@@ -2077,8 +2077,8 @@ const HistoryView = ({ user, plans, setView, onMenuClick }) => {
           >
             {(() => {
               const labels = {
-                actualDate: "Completed date",
-                actualDays: "Actual days",
+                actualDate: "Completed on",
+                actualDays: "Time taken",
               };
               return `Sort by: ${labels[historySort.key]}`;
             })()}

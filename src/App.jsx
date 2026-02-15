@@ -396,6 +396,17 @@ const SortDrawer = ({
   title,
   options,
 }) => {
+  const [localConfig, setLocalConfig] = React.useState(sortConfig);
+
+  React.useEffect(() => {
+    if (open) setLocalConfig(sortConfig);
+  }, [open, sortConfig]);
+
+  const handleApply = () => {
+    setSortConfig(localConfig);
+    onClose();
+  };
+
   return (
     <Drawer
       anchor="bottom"
@@ -421,9 +432,9 @@ const SortDrawer = ({
           {options.map((option) => (
             <ListItem key={option.key} disablePadding>
               <ListItemButton
-                selected={sortConfig.key === option.key}
+                selected={localConfig.key === option.key}
                 onClick={() =>
-                  setSortConfig({ ...sortConfig, key: option.key })
+                  setLocalConfig({ ...localConfig, key: option.key })
                 }
                 sx={{ borderRadius: 2, mb: 0.5 }}
               >
@@ -445,11 +456,11 @@ const SortDrawer = ({
 
         <Divider sx={{ mb: 2 }} />
         <ToggleButtonGroup
-          value={sortConfig.direction}
+          value={localConfig.direction}
           exclusive
           fullWidth
           onChange={(_, dir) =>
-            dir && setSortConfig({ ...sortConfig, direction: dir })
+            dir && setLocalConfig({ ...localConfig, direction: dir })
           }
           size="small"
         >
@@ -459,7 +470,7 @@ const SortDrawer = ({
         <Button
           fullWidth
           variant="contained"
-          onClick={onClose}
+          onClick={handleApply}
           sx={{ mt: 3, py: 1.5, borderRadius: 3 }}
         >
           Done
